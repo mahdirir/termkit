@@ -1,0 +1,17 @@
+# V build artifacts
+*.exe
+*.o
+*.a
+*.so
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.obj
+*.tmp.c
+v_*.exe
+
+# Local caches
+.vtmp/
+build/
+.tmp/

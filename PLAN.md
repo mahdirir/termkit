@@ -1,0 +1,140 @@
+# Plan
+
+## Status
+
+Phase 1 of 6: scaffolding. No runtime code exists yet.
+
+## Decisions
+
+| Decision | Choice |
+| --- | --- |
+| Deliverable now | VPM module `metif12.termkit`, no `vlang/v` PR yet |
+| Scope | Both TUI and CLI layers in one module, one future stdlib PR |
+| Placement | Standalone VPM repo, shaped for later stdlib inclusion |
+| bobatea | Independent implementation, compatible names, no copied code |
+
+## Environment
+
+- `C:\Users\MR\Projects\v-termkit` — clean worktree at `V_REPO/master`
+  (`7ede4c6133`), build harness only. The main `v` checkout is 404 commits
+  behind and is not used.
+- `C:\Users\MR\Projects\termkit` — the module repository (this repo).
+- Builds use the harness `./v`, a private `TMPDIR` under
+  `LocalAppData\Temp\opencode\termkit`, explicit `VJOBS` and `-memory-limit`.
+- Compiler sources are not changed, so `v self` is not needed.
+
+## Repository layout
+
+```
+termkit/
+  v.mod, LICENSE, README.md, GOALS.md, PLAN.md
+  program.v        # Program, Options, run loop, lifecycle
+  msg.v            # Msg interface and built-in messages
+  cmd.v            # Cmd sum type and command helpers
+  key.v            # key names, modifiers, bindings
+  options.v        # ProgramOpts, filters, stream injection
+  renderer.v       # cell grid, diffing, color profile, fps
+  layout.v         # Rect, constraints, stacks
+  style/           # Style, borders, padding, alignment
+  widgets/         # textinput, textarea, viewport, list, table,
+                   # spinner, progress, paginator, help, cursor
+  cli/             # command, flag, args, suggestions, completion,
+                   # help, man, version
+  examples/        # one runnable example per feature area
+  *_test.v         # co-located tests and golden fixtures
+```
+
+## Milestones
+
+### M1 — Scaffolding (in progress)
+
+- [x] Clean worktree based on `V_REPO/master`.
+- [x] New git repo with `v.mod`, MIT `LICENSE`, `.gitignore`.
+- [x] `README.md`, `GOALS.md`, `PLAN.md`.
+- [ ] Verify `./v version` and `./v check-md` in the harness.
+- [ ] Initial commit.
+
+### M2 — MVU core
+
+- [ ] `Msg` marker interface; `KeyMsg`, `MouseMsg`, `WindowSizeMsg`, `QuitMsg`,
+      `TickMsg`, `PasteMsg`, `ErrorMsg`.
+- [ ] `Cmd` sum type: `NoCmd`, `MsgCmd`, `CmdFn`, `BatchCmd`, `SequenceCmd`,
+      `TickCmd`, `EveryCmd`.
+- [ ] Helpers: `no_cmd`, `msg_cmd`, `cmd_fn`, `batch`, `sequence`, `tick`,
+      `every`, `quit`, `set_window_title`, `print`.
+- [ ] `Model` interface and `Program`/`new_program(...).run() !`.
+- [ ] `ProgramOpts`: input/output streams, alternate screen, mouse mode, FPS,
+      message filter, with/without renderer, context, signal policy.
+- [ ] Map `term.ui.Event` to messages; key table and binding maps.
+- [ ] Tests driven entirely by injected messages and streams.
+
+### M3 — Renderer
+
+- [ ] Cell grid with visible-width calculation for CJK and combining marks.
+- [ ] Frame diffing: emit only changed cells, reset styles on transitions.
+- [ ] Synchronized updates, alternate buffer, cursor show/hide, clear.
+- [ ] Color profile detection from `NO_COLOR`, `COLORTERM`, `TERM`.
+- [ ] `repaint()`, `suspend()`, `resume()`, FPS pacing.
+- [ ] Golden tests that assert exact escape output for small scenes.
+
+### M4 — Style, layout and widgets
+
+- [ ] `style`: colors, attributes, borders, padding, margins, alignment.
+- [ ] `layout`: `Rect`, fixed/percentage constraints, hstack/vstack, join.
+- [ ] Widgets in dependency order: cursor, textinput, viewport, list,
+      spinner, progress, paginator, help, textarea, table.
+- [ ] Each widget: pure update over `Msg`, pure `view() string`, no globals.
+- [ ] Tests for update transitions and rendered frames.
+
+### M5 — CLI core
+
+- [ ] `cli.Command` and `cli.Flag` with error-returning `parse`/`run`.
+- [ ] Persistent/local flags, shorthands, `--no-x`, `--`, clustered shorts.
+- [ ] Typed getters, defaults, repeatable flags, choice sets, validators.
+- [ ] Hooks and `on_initialize`, injectable stdout/stderr, context support.
+- [ ] Generated help, man page and version output.
+- [ ] Golden tests for all generated output.
+
+### M6 — CLI extras, docs and release prep
+
+- [ ] `did you mean` suggestions using edit distance.
+- [ ] Completion scripts for bash/zsh/fish/powershell and `__complete`.
+- [ ] Hidden/deprecated flags and commands, required flag groups.
+- [ ] Examples for every feature area.
+- [ ] Full `v fmt -l`, `v check-md`, `v -silent test .` pass.
+- [ ] Publish/push only after explicit approval.
+
+## Test strategy
+
+- Unit tests for message/command semantics, key parsing, widget transitions,
+  style/layout output and CLI parsing. No real TTY required.
+- Golden `.out` files for help, man, completion and renderer escape output.
+- A scripted in-memory driver runs a model to a fixed message sequence and
+  asserts the final model and rendered string.
+- Avoid real-terminal integration tests: they are unreliable on Windows CI.
+- Run the smallest relevant tests after each edit; run the full suite at the
+  end of each milestone.
+
+## Risks and mitigations
+
+| Risk | Mitigation |
+| --- | --- |
+| V closure contexts are pinned for process lifetime | `Cmd` is a sum type; `CmdFn` only for non-capturing functions |
+| `term.ui` has no bracketed paste or focus events | Approximate paste from batched `utf8` events; document focus as deferred |
+| V backend quirks with interfaces and sum types | Spike each construct in M2 before building on it |
+| Large public API is hard to review later | Keep packages small, document every public symbol, examples per feature |
+| User asked for a vlang/v PR originally | VPM phase is explicit; PR mapping is recorded below and deferred |
+
+## Deferred vlang/v PR mapping
+
+| Module package | Future stdlib location |
+| --- | --- |
+| `termkit` runtime, messages, commands | `vlib/term/ui/` (new files) |
+| `termkit.style`, `termkit.layout`, `termkit.widgets` | `vlib/term/ui/widgets/` |
+| `termkit.cli` | new files in `vlib/cli/` |
+| renderer diffing | `vlib/term/ui/ui.c.v` (resolves existing TODO) |
+| paste/focus input support | `vlib/term/ui/input_*.c.v`, `termios_nix.c.v` |
+| examples | `examples/term.ui/`, `examples/cli*.v` |
+
+The PR should be one logical change with focused commits, opened from
+`metif12/v` against `vlang/v`; no branch is ever created on `vlang/v` itself.
