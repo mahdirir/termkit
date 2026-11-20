@@ -82,3 +82,17 @@ fn test_program_skips_noop() {
 	p.process_queue()
 	assert p.view() == 'n=0:'
 }
+
+fn test_repaint_clears_baseline() {
+	mut p := new_test_program()
+	mut r := new_renderer(4, 1, .ansi)
+	r.draw_text(0, 0, 'x', -1, -1, 0)
+	r.frame()
+	p.renderer = r
+	p.repaint()
+	if restored := p.renderer {
+		assert restored.prev[0].text == ''
+	} else {
+		assert false
+	}
+}

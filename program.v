@@ -32,6 +32,7 @@ mut:
 	ui        &tui.Context = unsafe { nil }
 	queue     []Msg
 	scheduled []Scheduled
+	renderer  ?Renderer
 	next_id   int
 	quitting  bool
 }
@@ -195,11 +196,59 @@ fn frame_cb(user_data voidptr) {
 	if p.quitting {
 		exit(0)
 	}
-	if !p.opts.without_renderer && !isnil(p.ui) {
-		p.ui.write(p.view())
-		p.ui.reset()
-		p.ui.flush()
+	if p.opts.without_renderer || isnil(p.ui) {
+		return
 	}
+	if p.renderer == none {
+		w := if p.ui.window_width > 0 { p.ui.window_width } else { 80 }
+		h := if p.ui.window_height > 0 { p.ui.window_height } else { 24 }
+		mut r := new_renderer(w, h, detect_color_profile())
+		r.alt_screen = p.opts.alt_screen
+		p.ui.write(r.enter())
+		p.renderer = r
+	}
+	mut r := p.renderer or { return }
+	r.clear()
+	r.draw_text(0, 0, p.view(), -1, -1, 0)
+	p.ui.write(r.frame())
+	p.renderer = r
+	p.ui.flush()
+}
+
+// repaint discards the diff baseline so the next frame redraws every cell.
+pub fn (mut p Program) repaint() {
+	if mut r := p.renderer {
+		blank := Cell{}
+		for i in 0 .. r.prev.len {
+			r.prev[i] = blank
+		}
+		p.renderer = r
+	}
+}
+
+// suspend leaves the alternate screen and restores the terminal cursor.
+pub fn (mut p Program) suspend() {
+	if isnil(p.ui) {
+		return
+	}
+	if p.opts.alt_screen {
+		p.ui.write('\x1b[?1049l')
+	}
+	p.ui.show_cursor()
+	p.ui.flush()
+}
+
+// resume re-enters the alternate screen and forces a full repaint.
+pub fn (mut p Program) resume() {
+	if isnil(p.ui) {
+		return
+	}
+	if p.opts.alt_screen {
+		p.ui.write('\x1b[?1049h')
+	}
+	p.ui.hide_cursor()
+	p.ui.flush()
+	p.repaint()
 }
 
 fn msg_from_event(e &tui.Event) Msg {

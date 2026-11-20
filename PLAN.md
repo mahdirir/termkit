@@ -78,14 +78,14 @@ termkit/
 - [ ] Real bracketed paste and focus/blur require stdlib input changes; the
       message types exist but are not produced yet.
 
-### M3 — Renderer
+### M3 — Renderer (complete)
 
-- [ ] Cell grid with visible-width calculation for CJK and combining marks.
-- [ ] Frame diffing: emit only changed cells, reset styles on transitions.
-- [ ] Synchronized updates, alternate buffer, cursor show/hide, clear.
-- [ ] Color profile detection from `NO_COLOR`, `COLORTERM`, `TERM`.
-- [ ] `repaint()`, `suspend()`, `resume()`, FPS pacing.
-- [ ] Golden tests that assert exact escape output for small scenes.
+- [x] Cell grid with visible-width calculation for CJK and combining marks.
+- [x] Frame diffing: batch adjacent same-style cells, emit only changed runs.
+- [x] Synchronized updates, alternate buffer, cursor show/hide, clear.
+- [x] Color profile detection from `NO_COLOR`, `COLORTERM`, `TERM`.
+- [x] `repaint()`, `suspend()`, `resume()`; FPS pacing comes from `term.ui`.
+- [x] Golden tests that assert exact escape output for small scenes.
 
 ### M4 — Style, layout and widgets
 
