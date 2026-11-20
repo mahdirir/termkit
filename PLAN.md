@@ -60,19 +60,23 @@ termkit/
 - [ ] Retry the master-based bootstrap when the host is quiet, then re-run
       `check-md` with that compiler.
 
-### M2 — MVU core
+### M2 — MVU core (mostly complete)
 
-- [ ] `Msg` marker interface; `KeyMsg`, `MouseMsg`, `WindowSizeMsg`, `QuitMsg`,
-      `TickMsg`, `PasteMsg`, `ErrorMsg`.
-- [ ] `Cmd` sum type: `NoCmd`, `MsgCmd`, `CmdFn`, `BatchCmd`, `SequenceCmd`,
+- [x] `Msg` marker interface; `KeyMsg`, `MouseMsg`, `WindowSizeMsg`, `QuitMsg`,
+      `TickMsg`, `PasteMsg`, `ErrorMsg`, `TitleMsg`, `WriteLineMsg`, `NoopMsg`.
+- [x] `Cmd` sum type: `NoCmd`, `MsgCmd`, `CmdFn`, `BatchCmd`, `SequenceCmd`,
       `TickCmd`, `EveryCmd`.
-- [ ] Helpers: `no_cmd`, `msg_cmd`, `cmd_fn`, `batch`, `sequence`, `tick`,
-      `every`, `quit`, `set_window_title`, `print`.
-- [ ] `Model` interface and `Program`/`new_program(...).run() !`.
-- [ ] `ProgramOpts`: input/output streams, alternate screen, mouse mode, FPS,
-      message filter, with/without renderer, context, signal policy.
-- [ ] Map `term.ui.Event` to messages; key table and binding maps.
-- [ ] Tests driven entirely by injected messages and streams.
+- [x] Helpers: `no_cmd`, `msg_cmd`, `cmd_fn`, `batch`, `sequence`, `tick`,
+      `every`, `quit`, `set_window_title`, `write_line`, `delivered_msgs`.
+- [x] `Model` interface and `Program`/`new_program(...).run() !`.
+- [x] `ProgramOpts`: alternate screen, mouse mode, raw mode, FPS, title,
+      hide cursor, without renderer.
+- [x] Map `term.ui.Event` to messages; key-name table for all `term.ui` keys.
+- [x] Tests driven entirely by injected messages (no TTY required).
+- [ ] Keybinding map type.
+- [ ] Input/output stream injection and context cancellation.
+- [ ] Real bracketed paste and focus/blur require stdlib input changes; the
+      message types exist but are not produced yet.
 
 ### M3 — Renderer
 
