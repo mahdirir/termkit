@@ -87,14 +87,15 @@ termkit/
 - [x] `repaint()`, `suspend()`, `resume()`; FPS pacing comes from `term.ui`.
 - [x] Golden tests that assert exact escape output for small scenes.
 
-### M4 — Style, layout and widgets
+### M4 — Style, layout and widgets (mostly complete)
 
-- [ ] `style`: colors, attributes, borders, padding, margins, alignment.
-- [ ] `layout`: `Rect`, fixed/percentage constraints, hstack/vstack, join.
-- [ ] Widgets in dependency order: cursor, textinput, viewport, list,
-      spinner, progress, paginator, help, textarea, table.
-- [ ] Each widget: pure update over `Msg`, pure `view() string`, no globals.
-- [ ] Tests for update transitions and rendered frames.
+- [x] `style`: colors, attributes, borders, padding, alignment.
+- [x] `layout`: `Rect`, `Size`, alignment, hstack/vstack, join, intersect.
+- [x] Widgets: textinput, viewport, list, spinner, progress, help.
+- [x] Renderer parses embedded SGR so styled views survive diffing.
+- [x] Each widget: pure update over `Msg`, pure `view() string`, no globals.
+- [x] Tests for update transitions and rendered output.
+- [ ] Remaining widgets: textarea, table, paginator, cursor.
 
 ### M5 — CLI core
 

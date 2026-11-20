@@ -1,7 +1,6 @@
 module termkit
 
 import os
-import term
 
 // ColorProfile describes how much color a terminal supports.
 pub enum ColorProfile {
@@ -45,8 +44,8 @@ pub fn detect_color_profile() ColorProfile {
 struct Cell {
 	text  string
 	width int
-	fg    int = -1
-	bg    int = -1
+	fg    string
+	bg    string
 	attrs u8
 }
 
@@ -87,9 +86,10 @@ pub fn (mut r Renderer) clear() {
 	}
 }
 
-// set_cell places a string at x,y. fg and bg are SGR parameters (-1 means
-// default); attrs is a combination of the attr_* bits.
-pub fn (mut r Renderer) set_cell(x int, y int, text string, fg int, bg int, attrs u8) {
+// set_cell places a string at x,y. fg and bg are SGR parameter strings (for
+// example "31" or "38;5;42"); empty means default. attrs is a combination of
+// the attr_* bits.
+pub fn (mut r Renderer) set_cell(x int, y int, text string, fg string, bg string, attrs u8) {
 	if x < 0 || y < 0 || x >= r.width || y >= r.height {
 		return
 	}
@@ -107,17 +107,33 @@ pub fn (mut r Renderer) set_cell(x int, y int, text string, fg int, bg int, attr
 	}
 }
 
-// draw_text writes text starting at x,y. ANSI sequences in the text are
-// stripped; use the fg/bg/attrs arguments for styling.
-pub fn (mut r Renderer) draw_text(x int, y int, text string, fg int, bg int, attrs u8) {
-	plain := term.strip_ansi(text)
+// draw_text writes text starting at x,y. SGR color and attribute sequences in
+// the text are parsed into cell styles; other escape sequences are ignored.
+pub fn (mut r Renderer) draw_text(x int, y int, text string, fg string, bg string, attrs u8) {
 	mut cx := x
 	mut cy := y
+	mut state := SgrState{ fg: fg, bg: bg, attrs: attrs }
 	mut cluster := ''
-	for ch in plain.runes() {
+	mut in_sgr := false
+	mut sgr := ''
+	for ch in text.runes() {
+		if ch == 27 {
+			in_sgr = true
+			sgr = ''
+			continue
+		}
+		if in_sgr {
+			sgr += ch.str()
+			if ch == `m` {
+				apply_sgr(sgr, mut state)
+				in_sgr = false
+				sgr = ''
+			}
+			continue
+		}
 		if ch == `\n` {
 			if cluster != '' {
-				r.set_cell(cx, cy, cluster, fg, bg, attrs)
+				r.set_cell(cx, cy, cluster, state.fg, state.bg, state.attrs)
 				cluster = ''
 			}
 			cx = x
@@ -126,10 +142,10 @@ pub fn (mut r Renderer) draw_text(x int, y int, text string, fg int, bg int, att
 		}
 		if ch == `\t` {
 			if cluster != '' {
-				r.set_cell(cx, cy, cluster, fg, bg, attrs)
+				r.set_cell(cx, cy, cluster, state.fg, state.bg, state.attrs)
 				cluster = ''
 			}
-			r.set_cell(cx, cy, '    ', fg, bg, attrs)
+			r.set_cell(cx, cy, '    ', state.fg, state.bg, state.attrs)
 			cx += 4
 			continue
 		}
@@ -138,15 +154,112 @@ pub fn (mut r Renderer) draw_text(x int, y int, text string, fg int, bg int, att
 		if w == 0 {
 			continue
 		}
-		r.set_cell(cx, cy, cluster, fg, bg, attrs)
+		r.set_cell(cx, cy, cluster, state.fg, state.bg, state.attrs)
 		cx += w
 		cluster = ''
 	}
 	if cluster != '' {
 		w := utf8_str_visible_length(cluster)
 		if w > 0 {
-			r.set_cell(cx, cy, cluster, fg, bg, attrs)
+			r.set_cell(cx, cy, cluster, state.fg, state.bg, state.attrs)
 		}
+	}
+}
+
+struct SgrState {
+mut:
+	fg    string
+	bg    string
+	attrs u8
+}
+
+fn apply_sgr(seq string, mut st SgrState) {
+	if seq.len < 2 || seq[0] != `[` || seq[seq.len - 1] != `m` {
+		return
+	}
+	parts := seq[1..seq.len - 1].split(';')
+	mut i := 0
+	for i < parts.len {
+		code := parts[i].int()
+		match code {
+			0 {
+				st.fg = ''
+				st.bg = ''
+				st.attrs = 0
+			}
+			1 {
+				st.attrs |= attr_bold
+			}
+			3 {
+				st.attrs |= attr_italic
+			}
+			4 {
+				st.attrs |= attr_underline
+			}
+			7 {
+				st.attrs |= attr_reverse
+			}
+			22 {
+				if st.attrs & attr_bold != 0 {
+					st.attrs -= attr_bold
+				}
+				if st.attrs & attr_italic != 0 {
+					st.attrs -= attr_italic
+				}
+			}
+			23 {
+				if st.attrs & attr_italic != 0 {
+					st.attrs -= attr_italic
+				}
+			}
+			24 {
+				if st.attrs & attr_underline != 0 {
+					st.attrs -= attr_underline
+				}
+			}
+			27 {
+				if st.attrs & attr_reverse != 0 {
+					st.attrs -= attr_reverse
+				}
+			}
+			39 {
+				st.fg = ''
+			}
+			49 {
+				st.bg = ''
+			}
+			38, 48 {
+				if i + 1 < parts.len && parts[i + 1] == '5' && i + 2 < parts.len {
+					value := '${code};5;${parts[i + 2]}'
+					if code == 38 {
+						st.fg = value
+					} else {
+						st.bg = value
+					}
+					i += 2
+				} else if i + 4 < parts.len && parts[i + 1] == '2' {
+					value := '${code};2;${parts[i + 2]};${parts[i + 3]};${parts[i + 4]}'
+					if code == 38 {
+						st.fg = value
+					} else {
+						st.bg = value
+					}
+					i += 4
+				}
+			}
+			else {
+				if code >= 30 && code <= 37 {
+					st.fg = '${code}'
+				} else if code >= 90 && code <= 97 {
+					st.fg = '${code}'
+				} else if code >= 40 && code <= 47 {
+					st.bg = '${code}'
+				} else if code >= 100 && code <= 107 {
+					st.bg = '${code}'
+				}
+			}
+		}
+		i++
 	}
 }
 
@@ -211,10 +324,10 @@ pub fn (mut r Renderer) frame() string {
 fn style_for(c Cell, profile ColorProfile) string {
 	mut s := '\x1b[0m'
 	if profile != .ascii {
-		if c.fg >= 0 {
+		if c.fg != '' {
 			s += '\x1b[${c.fg}m'
 		}
-		if c.bg >= 0 {
+		if c.bg != '' {
 			s += '\x1b[${c.bg}m'
 		}
 	}

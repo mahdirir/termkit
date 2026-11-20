@@ -18,12 +18,12 @@ fn test_new_renderer_is_blank() {
 fn test_draw_text_and_diff() {
 	mut r := new_renderer(10, 1, .ansi)
 	r.sync_updates = false
-	r.draw_text(0, 0, 'hi', -1, -1, 0)
+	r.draw_text(0, 0, 'hi', '', '', 0)
 	first := r.frame()
 	assert first.starts_with('\x1b[1;1H')
 	assert first.contains('hi')
 	assert r.frame() == ''
-	r.draw_text(0, 0, 'ho', -1, -1, 0)
+	r.draw_text(0, 0, 'ho', '', '', 0)
 	second := r.frame()
 	assert second.contains('o')
 	assert !second.contains('hi')
@@ -32,7 +32,7 @@ fn test_draw_text_and_diff() {
 fn test_style_codes() {
 	mut r := new_renderer(4, 1, .ansi)
 	r.sync_updates = false
-	r.draw_text(0, 0, 'x', 31, 44, attr_bold | attr_underline)
+	r.draw_text(0, 0, 'x', '31', '44', attr_bold | attr_underline)
 	out := r.frame()
 	assert out.contains('\x1b[31m')
 	assert out.contains('\x1b[44m')
@@ -43,7 +43,7 @@ fn test_style_codes() {
 fn test_ascii_profile_drops_color() {
 	mut r := new_renderer(4, 1, .ascii)
 	r.sync_updates = false
-	r.draw_text(0, 0, 'x', 31, 44, 0)
+	r.draw_text(0, 0, 'x', '31', '44', 0)
 	out := r.frame()
 	assert !out.contains('\x1b[31m')
 	assert !out.contains('\x1b[44m')
@@ -52,7 +52,7 @@ fn test_ascii_profile_drops_color() {
 fn test_wide_glyph_uses_two_cells() {
 	mut r := new_renderer(4, 1, .ansi)
 	r.sync_updates = false
-	r.draw_text(0, 0, '世', -1, -1, 0)
+	r.draw_text(0, 0, '世', '', '', 0)
 	assert r.cells[0].width == 2
 	assert r.cells[1].width == 0
 	out := r.frame()
@@ -63,14 +63,23 @@ fn test_wide_glyph_uses_two_cells() {
 fn test_draw_text_newlines() {
 	mut r := new_renderer(5, 3, .ansi)
 	r.sync_updates = false
-	r.draw_text(0, 0, 'ab\ncd', -1, -1, 0)
+	r.draw_text(0, 0, 'ab\ncd', '', '', 0)
 	assert r.cells[0].text == 'a'
 	assert r.cells[5].text == 'c'
 }
 
+fn test_draw_text_parses_sgr() {
+	mut r := new_renderer(4, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, '\x1b[31mR\x1b[0m', '', '', 0)
+	assert r.cells[0].fg == '31'
+	out := r.frame()
+	assert out.contains('\x1b[31m')
+}
+
 fn test_sync_updates_wrapper() {
 	mut r := new_renderer(4, 1, .ansi)
-	r.draw_text(0, 0, 'a', -1, -1, 0)
+	r.draw_text(0, 0, 'a', '', '', 0)
 	out := r.frame()
 	assert out.starts_with('\x1b[?2026h')
 	assert out.ends_with('\x1b[?2026l')

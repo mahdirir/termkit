@@ -209,7 +209,7 @@ fn frame_cb(user_data voidptr) {
 	}
 	mut r := p.renderer or { return }
 	r.clear()
-	r.draw_text(0, 0, p.view(), -1, -1, 0)
+	r.draw_text(0, 0, p.view(), '', '', 0)
 	p.ui.write(r.frame())
 	p.renderer = r
 	p.ui.flush()
