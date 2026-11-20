@@ -67,6 +67,29 @@ fn test_spinner_and_progress() {
 	assert bar.view().contains('50%')
 }
 
+fn test_textarea() {
+	mut area := TextArea{}
+	area.set_text('one\ntwo')
+	area.update(termkit.KeyMsg{ key: termkit.key_end })
+	area.update(termkit.KeyMsg{ key: termkit.key_enter })
+	area.update(termkit.KeyMsg{ key: 'x' })
+	assert area.text() == 'one\ntwo\nx'
+	assert area.view().contains('x')
+}
+
+fn test_table_and_paginator() {
+	mut table := Table{}
+	table.set_data(['name', 'age'], [['ann', '30'], ['bob', '40']])
+	assert table.view().contains('name')
+	table.update(termkit.KeyMsg{ key: termkit.key_down })
+	assert table.selected == 1
+	mut page := Paginator{ total: 25 }
+	assert page.pages() == 3
+	page.update(termkit.KeyMsg{ key: termkit.key_right })
+	assert page.start() == 10
+	assert page.view().contains('2/3')
+}
+
 fn test_help_view() {
 	help := Help{ bindings: [Binding{ key: 'q', description: 'quit' }] }
 	assert help.view().contains('q')

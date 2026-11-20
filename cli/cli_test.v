@@ -106,6 +106,14 @@ fn test_completion_result() {
 	assert completion_result(cmd, ['--']).contains('--help')
 }
 
+fn test_manpage() {
+	mut cmd := Command{ name: 'app', description: 'demo' }
+	cmd.flags << Flag{ name: 'name', description: 'a name' }
+	page := cmd.manpage()
+	assert page.contains('.Nm app')
+	assert page.contains('a name')
+}
+
 fn test_completion_scripts() {
 	for shell in ['bash', 'zsh', 'fish', 'powershell'] {
 		assert completion_script('app', shell).len > 0

@@ -107,6 +107,18 @@ fn main() {
 }
 ```
 
+## Examples
+
+- `examples/counter.v` — a full MVU app with keyboard input and diffed output.
+- `examples/cli_app.v` — a command tree with flags, help, version and
+  completion support.
+
+Run them from the repository root:
+
+```v ignore
+v run examples/cli_app.v -- --help
+```
+
 ## Design notes
 
 - **Model / Message / Command.** State is owned by the model. Events arrive as

@@ -73,7 +73,7 @@ termkit/
       hide cursor, without renderer.
 - [x] Map `term.ui.Event` to messages; key-name table for all `term.ui` keys.
 - [x] Tests driven entirely by injected messages (no TTY required).
-- [ ] Keybinding map type.
+- [x] Keybinding map type (`KeyMap`).
 - [ ] Input/output stream injection and context cancellation.
 - [ ] Real bracketed paste and focus/blur require stdlib input changes; the
       message types exist but are not produced yet.
@@ -95,7 +95,8 @@ termkit/
 - [x] Renderer parses embedded SGR so styled views survive diffing.
 - [x] Each widget: pure update over `Msg`, pure `view() string`, no globals.
 - [x] Tests for update transitions and rendered output.
-- [ ] Remaining widgets: textarea, table, paginator, cursor.
+- [x] Remaining widgets: textarea, table, paginator.
+- [ ] Cursor widget.
 
 ### M5 — CLI core (mostly complete)
 
@@ -105,7 +106,8 @@ termkit/
 - [x] Hooks and `init_fn`; positional arg rules.
 - [x] Generated help and version output.
 - [x] Suggestions via edit distance.
-- [ ] Man page generation, injectable streams, context cancellation.
+- [x] Man page generation.
+- [ ] Injectable streams, context cancellation.
 
 ### M6 — CLI extras, docs and release prep (in progress)
 
