@@ -1,5 +1,6 @@
 module termkit
 
+import context
 import time
 
 struct CounterModel {
@@ -81,6 +82,14 @@ fn test_program_skips_noop() {
 	p.send(NoopMsg{})
 	p.process_queue()
 	assert p.view() == 'n=0:'
+}
+
+fn test_context_cancellation() {
+	mut parent := context.background()
+	mut ctx, cancel := context.with_cancel(mut parent)
+	assert !context_cancelled(ctx)
+	cancel()
+	assert context_cancelled(ctx)
 }
 
 fn test_program_opts_hooks() {

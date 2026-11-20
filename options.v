@@ -1,5 +1,7 @@
 module termkit
 
+import context
+
 // ProgramOpts controls how a Program is built and run.
 pub struct ProgramOpts {
 pub:
@@ -24,4 +26,6 @@ pub:
 	out ?fn (string)
 	// cancel is checked once per frame. Returning true stops the program.
 	cancel ?fn () bool
+	// ctx stops the program when it is cancelled.
+	ctx ?context.Context
 }

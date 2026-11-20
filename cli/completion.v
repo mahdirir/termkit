@@ -44,7 +44,7 @@ fn bash_script() string {
 		'  local cur="~{COMP_WORDS[COMP_CWORD]}"',
 		'  local out',
 		'  out=~("~{COMP_WORDS[0]}" __complete "~{COMP_WORDS[@]:1:~COMP_CWORD}")',
-		'  COMPREPLY=(~compgen -W "~(~printf "%s\\n" "~out" | cut -f1)" -- "~cur")',
+		'  COMPREPLY=(~(compgen -W "~(printf "%s\\n" "~out" | cut -f1)" -- "~cur"))',
 		'}',
 		'complete -F _NAME_complete NAME',
 	]

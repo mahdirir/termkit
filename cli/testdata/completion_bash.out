@@ -1,0 +1,7 @@
+_app_complete() {
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local out
+  out=$("${COMP_WORDS[0]}" __complete "${COMP_WORDS[@]:1:$COMP_CWORD}")
+  COMPREPLY=($(compgen -W "$(printf "%s\n" "$out" | cut -f1)" -- "$cur"))
+}
+complete -F _app_complete app

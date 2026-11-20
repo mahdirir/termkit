@@ -74,8 +74,8 @@ termkit/
 - [x] Map `term.ui.Event` to messages; key-name table for all `term.ui` keys.
 - [x] Tests driven entirely by injected messages (no TTY required).
 - [x] Keybinding map type (`KeyMap`).
-- [x] Headless output injection (`ProgramOpts.out`) and a cancel hook.
-- [ ] Full context.Context integration.
+- [x] Headless output injection (`ProgramOpts.out`), cancel hook and
+      `context.Context` cancellation.
 - [ ] Real bracketed paste and focus/blur require stdlib input changes; the
       message types exist but are not produced yet.
 
@@ -115,7 +115,7 @@ termkit/
 - [x] Hidden/deprecated flags and commands, required flags.
 - [x] Examples: `examples/counter.v`, `examples/cli_app.v`, `examples/widgets.v`.
 - [x] Full `v fmt -l`, `v check-md`, `v -silent test .` pass locally.
-- [ ] Golden completion fixtures.
+- [x] Golden completion fixture for the bash script.
 - [ ] Push to `metif12/termkit` and VPM registration after approval.
 
 ## Test strategy

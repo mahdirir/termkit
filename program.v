@@ -1,5 +1,6 @@
 module termkit
 
+import context
 import term.ui as tui
 import time
 
@@ -198,6 +199,11 @@ fn frame_cb(user_data voidptr) {
 			p.quitting = true
 		}
 	}
+	if ctx := p.opts.ctx {
+		if context_cancelled(ctx) {
+			p.quitting = true
+		}
+	}
 	if p.quitting {
 		exit(0)
 	}
@@ -224,6 +230,12 @@ fn frame_cb(user_data voidptr) {
 	p.ui.write(r.frame())
 	p.renderer = r
 	p.ui.flush()
+}
+
+// context_cancelled reports whether ctx has been cancelled.
+pub fn context_cancelled(ctx context.Context) bool {
+	mut c := ctx
+	return c.err() != none
 }
 
 // repaint discards the diff baseline so the next frame redraws every cell.

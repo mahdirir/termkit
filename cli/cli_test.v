@@ -120,3 +120,8 @@ fn test_completion_scripts() {
 	}
 	assert completion_script('app', 'unknown') == ''
 }
+
+fn test_completion_golden() {
+	expected := $embed_file('testdata/completion_bash.out').to_string()
+	assert completion_script('app', 'bash') == expected
+}
