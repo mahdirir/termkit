@@ -19,4 +19,9 @@ pub:
 	// without_renderer stops the runtime from writing view() output. Messages
 	// are still processed, which is useful for headless programs and tests.
 	without_renderer bool
+	// out receives view() output when without_renderer is set. When absent,
+	// headless output is discarded.
+	out ?fn (string)
+	// cancel is checked once per frame. Returning true stops the program.
+	cancel ?fn () bool
 }

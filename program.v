@@ -193,10 +193,21 @@ fn frame_cb(user_data voidptr) {
 	mut p := unsafe { &Program(user_data) }
 	p.pump_timers()
 	p.process_queue()
+	if f := p.opts.cancel {
+		if f() {
+			p.quitting = true
+		}
+	}
 	if p.quitting {
 		exit(0)
 	}
-	if p.opts.without_renderer || isnil(p.ui) {
+	if p.opts.without_renderer {
+		if f := p.opts.out {
+			f(p.view())
+		}
+		return
+	}
+	if isnil(p.ui) {
 		return
 	}
 	if p.renderer == none {

@@ -74,7 +74,8 @@ termkit/
 - [x] Map `term.ui.Event` to messages; key-name table for all `term.ui` keys.
 - [x] Tests driven entirely by injected messages (no TTY required).
 - [x] Keybinding map type (`KeyMap`).
-- [ ] Input/output stream injection and context cancellation.
+- [x] Headless output injection (`ProgramOpts.out`) and a cancel hook.
+- [ ] Full context.Context integration.
 - [ ] Real bracketed paste and focus/blur require stdlib input changes; the
       message types exist but are not produced yet.
 
@@ -95,8 +96,7 @@ termkit/
 - [x] Renderer parses embedded SGR so styled views survive diffing.
 - [x] Each widget: pure update over `Msg`, pure `view() string`, no globals.
 - [x] Tests for update transitions and rendered output.
-- [x] Remaining widgets: textarea, table, paginator.
-- [ ] Cursor widget.
+- [x] Remaining widgets: textarea, table, paginator, cursor.
 
 ### M5 — CLI core (mostly complete)
 
@@ -113,9 +113,9 @@ termkit/
 
 - [x] Completion scripts for bash/zsh/fish/powershell and `__complete`.
 - [x] Hidden/deprecated flags and commands, required flags.
-- [x] Examples: `examples/counter.v`, `examples/cli_app.v`.
+- [x] Examples: `examples/counter.v`, `examples/cli_app.v`, `examples/widgets.v`.
 - [x] Full `v fmt -l`, `v check-md`, `v -silent test .` pass locally.
-- [ ] More examples (widgets, styling) and golden completion fixtures.
+- [ ] Golden completion fixtures.
 - [ ] Push to `metif12/termkit` and VPM registration after approval.
 
 ## Test strategy

@@ -112,6 +112,7 @@ fn main() {
 - `examples/counter.v` — a full MVU app with keyboard input and diffed output.
 - `examples/cli_app.v` — a command tree with flags, help, version and
   completion support.
+- `examples/widgets.v` — a filterable list with a text input and help bar.
 
 Run them from the repository root:
 

@@ -83,6 +83,15 @@ fn test_program_skips_noop() {
 	assert p.view() == 'n=0:'
 }
 
+fn test_program_opts_hooks() {
+	opts := ProgramOpts{
+		without_renderer: true
+		out:              fn (s string) {}
+		cancel:           fn () bool { return false }
+	}
+	assert opts.without_renderer
+}
+
 fn test_repaint_clears_baseline() {
 	mut p := new_test_program()
 	mut r := new_renderer(4, 1, .ansi)

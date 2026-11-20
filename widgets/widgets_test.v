@@ -90,6 +90,13 @@ fn test_table_and_paginator() {
 	assert page.view().contains('2/3')
 }
 
+fn test_cursor_blink() {
+	mut cursor := Cursor{}
+	assert cursor.view() == '█'
+	cursor.update(termkit.TickMsg{ id: 1, at: 0 })
+	assert cursor.view() == ' '
+}
+
 fn test_help_view() {
 	help := Help{ bindings: [Binding{ key: 'q', description: 'quit' }] }
 	assert help.view().contains('q')
