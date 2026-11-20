@@ -16,12 +16,16 @@ Phase 1 of 6: scaffolding. No runtime code exists yet.
 ## Environment
 
 - `C:\Users\MR\Projects\v-termkit` — clean worktree at `V_REPO/master`
-  (`7ede4c6133`), build harness only. The main `v` checkout is 404 commits
-  behind and is not used.
+  (`7ede4c6133`), reserved as the build harness. The main `v` checkout is 404
+  commits behind and is not used.
 - `C:\Users\MR\Projects\termkit` — the module repository (this repo).
-- Builds use the harness `./v`, a private `TMPDIR` under
+- The master bootstrap was attempted with `makev.bat --local -gcc` but stopped
+  during `v_stage.c` generation while other GCC builds were running on the
+  host. Until it is retried in a quiet window, development and tests use the
+  installed V 0.5.2 compiler (`C:\Users\MR\v\.bin\v`), which builds pure-V
+  stdlib code. No compiler sources are changed, so `v self` is not needed.
+- All builds use a private `TMPDIR` under
   `LocalAppData\Temp\opencode\termkit`, explicit `VJOBS` and `-memory-limit`.
-- Compiler sources are not changed, so `v self` is not needed.
 
 ## Repository layout
 
@@ -51,8 +55,10 @@ termkit/
 - [x] Clean worktree based on `V_REPO/master`.
 - [x] New git repo with `v.mod`, MIT `LICENSE`, `.gitignore`.
 - [x] `README.md`, `GOALS.md`, `PLAN.md`.
-- [ ] Verify `./v version` and `./v check-md` in the harness.
-- [ ] Initial commit.
+- [x] Verify `check-md` on all three Markdown files (0 warnings, 0 errors).
+- [x] Initial commit.
+- [ ] Retry the master-based bootstrap when the host is quiet, then re-run
+      `check-md` with that compiler.
 
 ### M2 — MVU core
 
