@@ -3,8 +3,9 @@
 A V toolkit for building terminal applications that can stand next to Go's
 Bubble Tea, Bubbles, Lip Gloss and Cobra.
 
-> **Status: in development.** Code snippets below describe the target API.
-> See `GOALS.md` for the definition of done and `PLAN.md` for the build order.
+> **Status: core implemented.** The MVU runtime, diffing renderer, styling,
+> core widgets and the CLI framework are available. See `GOALS.md` for the
+> definition of done and `PLAN.md` for the remaining work.
 
 ## Why
 
@@ -72,9 +73,10 @@ fn (mut m Model) view() string {
 
 fn main() {
 	mut model := &Model{}
-	termkit.new_program(mut model, termkit.ProgramOpts{
+	mut program := termkit.new_program(model, termkit.ProgramOpts{
 		alt_screen: true
-	}).run()!
+	})
+	program.run()!
 }
 ```
 
@@ -95,10 +97,10 @@ fn main() {
 	root.add_command(cli.Command{
 		name:        'greet'
 		description: 'greet someone'
+		args_rule:   .at_least_one
 		flags:       [cli.Flag{name: 'loud', abbrev: 'l', flag: .bool}]
-		execute:     fn (cmd cli.Command) ! {
-			name := if cmd.args.len > 0 { cmd.args[0] } else { 'world' }
-			println('hello, ${name}!')
+		execute_fn:  fn () ! {
+			println('hello!')
 		}
 	})
 	root.run(os.args)!

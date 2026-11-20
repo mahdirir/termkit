@@ -40,7 +40,7 @@ fn (mut m CounterModel) view() string {
 
 fn new_test_program() Program {
 	mut model := &CounterModel{}
-	return new_program(mut model, ProgramOpts{ without_renderer: true })
+	return new_program(model, ProgramOpts{ without_renderer: true })
 }
 
 fn test_program_updates_model() {
@@ -86,7 +86,7 @@ fn test_program_skips_noop() {
 fn test_repaint_clears_baseline() {
 	mut p := new_test_program()
 	mut r := new_renderer(4, 1, .ansi)
-	r.draw_text(0, 0, 'x', -1, -1, 0)
+	r.draw_text(0, 0, 'x', '', '', 0)
 	r.frame()
 	p.renderer = r
 	p.repaint()

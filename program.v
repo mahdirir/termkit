@@ -38,7 +38,7 @@ mut:
 }
 
 // new_program creates a Program for model.
-pub fn new_program(mut model Model, opts ProgramOpts) Program {
+pub fn new_program(model Model, opts ProgramOpts) Program {
 	return Program{
 		model: model
 		opts:  opts

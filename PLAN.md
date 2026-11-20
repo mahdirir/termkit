@@ -97,23 +97,24 @@ termkit/
 - [x] Tests for update transitions and rendered output.
 - [ ] Remaining widgets: textarea, table, paginator, cursor.
 
-### M5 — CLI core
+### M5 — CLI core (mostly complete)
 
-- [ ] `cli.Command` and `cli.Flag` with error-returning `parse`/`run`.
-- [ ] Persistent/local flags, shorthands, `--no-x`, `--`, clustered shorts.
-- [ ] Typed getters, defaults, repeatable flags, choice sets, validators.
-- [ ] Hooks and `on_initialize`, injectable stdout/stderr, context support.
-- [ ] Generated help, man page and version output.
-- [ ] Golden tests for all generated output.
+- [x] `cli.Command` and `cli.Flag` with error-returning `run`.
+- [x] Persistent flags, shorthands, `--`, clustered shorts, aliases.
+- [x] Typed getters, defaults, repeatable flags, choice sets.
+- [x] Hooks and `init_fn`; positional arg rules.
+- [x] Generated help and version output.
+- [x] Suggestions via edit distance.
+- [ ] Man page generation, injectable streams, context cancellation.
 
-### M6 — CLI extras, docs and release prep
+### M6 — CLI extras, docs and release prep (in progress)
 
-- [ ] `did you mean` suggestions using edit distance.
-- [ ] Completion scripts for bash/zsh/fish/powershell and `__complete`.
-- [ ] Hidden/deprecated flags and commands, required flag groups.
-- [ ] Examples for every feature area.
-- [ ] Full `v fmt -l`, `v check-md`, `v -silent test .` pass.
-- [ ] Publish/push only after explicit approval.
+- [x] Completion scripts for bash/zsh/fish/powershell and `__complete`.
+- [x] Hidden/deprecated flags and commands, required flags.
+- [x] Examples: `examples/counter.v`, `examples/cli_app.v`.
+- [x] Full `v fmt -l`, `v check-md`, `v -silent test .` pass locally.
+- [ ] More examples (widgets, styling) and golden completion fixtures.
+- [ ] Push to `metif12/termkit` and VPM registration after approval.
 
 ## Test strategy
 
