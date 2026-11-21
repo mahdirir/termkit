@@ -51,6 +51,19 @@ pub fn suggest(input string, candidates []string) string {
 	return 'did you mean `${best}`?'
 }
 
+// suggest_command returns a suggestion for a mistyped sub-command.
+pub fn suggest_command(input string, commands []Command) string {
+	mut names := []string{}
+	for cmd in commands {
+		if cmd.hidden {
+			continue
+		}
+		names << cmd.name
+		names << cmd.aliases
+	}
+	return suggest(input, names)
+}
+
 fn suggest_flags(input string, flags []Flag) string {
 	mut names := []string{}
 	for f in flags {

@@ -60,6 +60,18 @@ fn test_wide_glyph_uses_two_cells() {
 	assert r.frame() == ''
 }
 
+fn test_resize() {
+	mut r := new_renderer(4, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, 'ab', '', '', 0)
+	r.frame()
+	r.resize(6, 2)
+	assert r.cells.len == 12
+	assert r.prev.len == 12
+	r.draw_text(0, 0, 'xy', '', '', 0)
+	assert r.frame().contains('xy')
+}
+
 fn test_draw_text_newlines() {
 	mut r := new_renderer(5, 3, .ansi)
 	r.sync_updates = false

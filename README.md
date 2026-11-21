@@ -130,8 +130,8 @@ v run examples/cli_app.v -- --help
   process-wide table, so a per-keystroke closure would pin memory forever.
   `batch`, `sequence`, `tick` and `every` are data, not captured functions.
 - **Rendering is diffed.** A cell grid is compared against the previous frame
-  so only changed cells are emitted. This avoids the tearing described in the
-  `term.ui` README.
+  so only changed cells are emitted. The grid resizes on `WindowSizeMsg`.
+  This avoids the tearing described in the `term.ui` README.
 - **No new C dependencies.** Everything is written in V and builds on the
   platform support already present in `term.ui`.
 - **Testable without a terminal.** Rendering, widgets, parsing, help and

@@ -4,6 +4,17 @@ module cli
 // `value<TAB>description`, a format all supported shells can consume.
 pub fn completion_result(c &Command, args []string) string {
 	last := if args.len > 0 { args[args.len - 1] } else { '' }
+	remaining := if args.len > 1 { args[..args.len - 1] } else { []string{} }
+	return completion_for(c, remaining, last).join('\n')
+}
+
+fn completion_for(c &Command, remaining []string, last string) []string {
+	if remaining.len > 0 {
+		idx := c.find_sub(remaining[0])
+		if idx >= 0 {
+			return completion_for(&c.commands[idx], remaining[1..], last)
+		}
+	}
 	mut out := []string{}
 	if last.starts_with('-') {
 		for f in c.all_flags {
@@ -14,14 +25,14 @@ pub fn completion_result(c &Command, args []string) string {
 				out << '--${f.name}\t${f.description}'
 			}
 		}
-		return out.join('\n')
+		return out
 	}
 	for sub in c.commands {
 		if !sub.hidden && sub.name.starts_with(last) {
 			out << '${sub.name}\t${sub.description}'
 		}
 	}
-	return out.join('\n')
+	return out
 }
 
 // completion_script returns a shell completion script for name. Shell

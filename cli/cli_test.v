@@ -190,6 +190,27 @@ fn test_injectable_help_output() {
 	assert test_output.contains('demo')
 }
 
+fn test_unknown_command_suggestion() {
+	mut root := Command{ name: 'app' }
+	root.add_command(Command{ name: 'greet', aliases: ['g'] })
+	root.run(['app', 'greetx']) or {
+		assert err.msg().contains('greet')
+		return
+	}
+	assert false
+}
+
+fn test_nested_completion() {
+	mut root := Command{ name: 'app' }
+	root.add_command(Command{
+		name:  'issue'
+		flags: [Flag{ name: 'label', description: 'filter by label' }]
+	})
+	root.setup()
+	result := completion_result(root, ['issue', '--'])
+	assert result.contains('--label')
+}
+
 fn test_deprecated_flag_warning() ! {
 	test_output = ''
 	mut cmd := Command{

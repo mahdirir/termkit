@@ -84,6 +84,20 @@ fn test_program_skips_noop() {
 	assert p.view() == 'n=0:'
 }
 
+fn test_program_resizes_renderer() {
+	mut p := new_test_program()
+	r := new_renderer(4, 1, .ansi)
+	p.renderer = r
+	p.send(WindowSizeMsg{ width: 8, height: 3 })
+	p.process_queue()
+	if restored := p.renderer {
+		assert restored.width == 8
+		assert restored.height == 3
+	} else {
+		assert false
+	}
+}
+
 fn test_threaded_send() {
 	mut p := new_test_program()
 	ptr := &p

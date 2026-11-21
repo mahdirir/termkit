@@ -53,9 +53,10 @@ struct Cell {
 // previous frame. It is independent of term.ui so it can be tested with plain
 // strings.
 pub struct Renderer {
+pub mut:
+	width  int
+	height int
 pub:
-	width   int
-	height  int
 	profile ColorProfile
 mut:
 	cells        []Cell
@@ -76,6 +77,22 @@ pub fn new_renderer(width int, height int, profile ColorProfile) Renderer {
 		cells:   []Cell{len: size, init: blank}
 		prev:    []Cell{len: size, init: blank}
 	}
+}
+
+// resize changes the grid dimensions. The diff baseline is reset so the next
+// frame redraws the whole screen.
+pub fn (mut r Renderer) resize(width int, height int) {
+	if width <= 0 || height <= 0 {
+		return
+	}
+	if width == r.width && height == r.height {
+		return
+	}
+	blank := Cell{}
+	r.width = width
+	r.height = height
+	r.cells = []Cell{len: width * height, init: blank}
+	r.prev = []Cell{len: width * height, init: blank}
 }
 
 // clear resets the current grid to blank cells.

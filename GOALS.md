@@ -49,8 +49,10 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - Typed flags with shorthands, clustered short flags, `--no-x` negation,
      `--` terminator, hidden/deprecated flags, choice sets and validators.
    - Argument validators, hooks, `on_initialize`, context cancellation.
-   - Generated help, man pages, version output, `did you mean` suggestions.
-   - Shell completion generation and a dynamic `__complete` protocol.
+   - Generated help, man pages, version output, `did you mean` suggestions
+     for both flags and sub-commands.
+   - Shell completion generation and a dynamic `__complete` protocol that
+     walks nested command trees.
    - Error returns instead of `exit()` inside the parser; injectable streams.
    - Hooks that receive the parsed command so flags are readable without
      globals; deprecation warnings for old flags and commands.

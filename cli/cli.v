@@ -302,6 +302,11 @@ fn (mut c Command) dispatch(mut args []string) ! {
 			sub.dispatch(mut args[i + 1..])!
 			return
 		}
+		if c.commands.len > 0 && isnil(c.execute_fn) && isnil(c.execute_with_fn) {
+			hint := suggest_command(token, c.commands)
+			msg := 'unknown command `${token}` for `${c.full_name()}`'
+			return error(if hint == '' { msg } else { '${msg}. ${hint}' })
+		}
 		c.args << token
 		i++
 	}

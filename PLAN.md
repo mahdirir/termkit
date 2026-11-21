@@ -79,6 +79,7 @@ termkit/
 - [ ] Real bracketed paste and focus/blur require stdlib input changes; the
       message types exist but are not produced yet.
 - [x] Mutex-protected queue; `Program.send` is safe from spawned threads.
+- [x] Renderer resizes on `WindowSizeMsg`.
 
 ### M3 — Renderer (complete)
 
@@ -117,6 +118,7 @@ termkit/
       required-together flag groups.
 - [x] `*_with_fn` hooks receiving the parsed command; injectable out/err
       streams; read-only `get_flag`; deprecated-flag warnings.
+- [x] Unknown-command suggestions and tree-aware `__complete` traversal.
 - [x] Man page generation.
 - [ ] Injectable streams, context cancellation.
 

@@ -137,6 +137,9 @@ fn (mut p Program) handle(msg Msg) {
 		NoopMsg {
 			return
 		}
+		WindowSizeMsg {
+			p.resize_renderer(msg.width, msg.height)
+		}
 		else {}
 	}
 	updated, cmd := p.model.update(msg)
@@ -267,6 +270,16 @@ fn frame_cb(user_data voidptr) {
 pub fn context_cancelled(ctx context.Context) bool {
 	mut c := ctx
 	return c.err() != none
+}
+
+fn (mut p Program) resize_renderer(width int, height int) {
+	if width <= 0 || height <= 0 {
+		return
+	}
+	if mut r := p.renderer {
+		r.resize(width, height)
+		p.renderer = r
+	}
 }
 
 // repaint discards the diff baseline so the next frame redraws every cell.
