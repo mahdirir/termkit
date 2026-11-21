@@ -1,6 +1,7 @@
 module termkit
 
 import context
+import os
 import sync
 import term.ui as tui
 import time
@@ -151,6 +152,14 @@ fn (mut p Program) handle(msg Msg) {
 				p.ui.write(msg.text)
 				p.ui.write('\n')
 				p.ui.flush()
+			}
+			return
+		}
+		LogMsg {
+			if msg.path != '' {
+				mut file := os.open_append(msg.path) or { return }
+				file.writeln(msg.message) or {}
+				file.close()
 			}
 			return
 		}

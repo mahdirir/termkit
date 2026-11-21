@@ -110,6 +110,11 @@ pub fn write_line(text string) Cmd {
 	return msg_cmd(WriteLineMsg{ text: text })
 }
 
+// log_to_file asks the runtime to append message to a log file.
+pub fn log_to_file(path string, message string) Cmd {
+	return msg_cmd(LogMsg{ path: path, message: message })
+}
+
 // call_cmd_fn invokes a CmdFn. Going through a parameter avoids the unreliable
 // result of calling a function value straight out of a sum-type match arm.
 fn call_cmd_fn(f CmdFn) Msg {

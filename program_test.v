@@ -1,6 +1,7 @@
 module termkit
 
 import context
+import os
 import time
 
 struct CounterModel {
@@ -93,6 +94,16 @@ fn drop_noop(msg termkit.Msg) ?termkit.Msg {
 			return msg
 		}
 	}
+}
+
+fn test_log_to_file() {
+	path := os.join_path(os.vtmp_dir(), 'termkit_log_test.txt')
+	os.rm(path) or {}
+	mut p := new_test_program()
+	p.send(LogMsg{ path: path, message: 'hello log' })
+	p.process_queue()
+	assert os.read_file(path) or { '' }.contains('hello log')
+	os.rm(path) or {}
 }
 
 fn test_message_filter() {

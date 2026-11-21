@@ -134,6 +134,14 @@ pub:
 	text string
 }
 
+// LogMsg asks the runtime to append a line to a log file. File logging is
+// useful in TUI apps where stdout is reserved for the rendered frame.
+pub struct LogMsg {
+pub:
+	path    string
+	message string
+}
+
 // NoopMsg is produced for input the runtime does not translate. Models can
 // safely ignore it.
 pub struct NoopMsg {}
