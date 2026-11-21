@@ -144,6 +144,26 @@ fn test_timer_widgets() {
 	assert timer.done()
 }
 
+fn test_timer_pause_and_restart() {
+	mut stopwatch := Stopwatch{}
+	stopwatch.start()
+	stopwatch.update(termkit.TickMsg{ at: 1_000_000_000 })
+	stopwatch.update(termkit.TickMsg{ at: 2_000_000_000 })
+	stopwatch.stop()
+	stopwatch.start()
+	stopwatch.update(termkit.TickMsg{ at: 10_000_000_000 })
+	assert stopwatch.elapsed == 1_000_000_000
+
+	mut timer := new_timer(5 * time.second)
+	timer.start()
+	timer.update(termkit.TickMsg{ at: 1_000_000_000 })
+	timer.update(termkit.TickMsg{ at: 2_000_000_000 })
+	timer.stop()
+	timer.start()
+	timer.update(termkit.TickMsg{ at: 10_000_000_000 })
+	assert timer.remaining == 4 * time.second
+}
+
 fn test_focus_group() {
 	mut group := new_focus_group()
 	group.add(TextInput{})

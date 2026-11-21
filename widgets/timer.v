@@ -11,9 +11,11 @@ pub mut:
 	last_at i64
 }
 
-// start begins counting.
+// start begins counting. The next tick establishes a fresh baseline so time
+// spent paused is not counted.
 pub fn (mut s Stopwatch) start() {
 	s.running = true
+	s.last_at = 0
 }
 
 // stop pauses counting.
@@ -65,9 +67,11 @@ pub fn new_timer(d time.Duration) Timer {
 	return Timer{ remaining: d }
 }
 
-// start begins counting down.
+// start begins counting down. The next tick establishes a fresh baseline so
+// time spent paused is not counted.
 pub fn (mut t Timer) start() {
 	t.running = true
+	t.last_at = 0
 }
 
 // stop pauses the countdown.

@@ -114,6 +114,7 @@ termkit/
 - [x] Rune-aware cursors in text input/area; TextArea multi-line paste.
 - [x] `hstack`/`vstack` accumulate sizes for default-position rects.
 - [x] Border titles truncate on rune boundaries; man pages emit valid mdoc lists.
+- [x] Stopwatch/Timer do not count paused time after a restart.
 - [x] Tabs and collapsible Tree widgets.
 
 ### M5 — CLI core (complete)
@@ -132,6 +133,7 @@ termkit/
 - [x] `silence_usage` and `silence_errors` options.
 - [x] Typed getters reject bad values; `get_ints`/`get_floats` added.
 - [x] Persistent parent hooks (before/after) for command trees.
+- [x] Short-flag clusters accept value flags (next arg or attached value).
 - [x] Man page generation.
 - [x] Injectable streams, context cancellation.
 

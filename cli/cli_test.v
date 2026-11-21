@@ -78,6 +78,26 @@ fn test_bool_and_short_cluster() ! {
 	assert test_executed
 }
 
+fn test_short_cluster_with_value() ! {
+	mut cmd := Command{
+		name:       'app'
+		execute_fn: mark_executed
+		flags:      [Flag{ name: 'all', abbrev: 'a', flag: .bool }, Flag{ name: 'name', abbrev: 'n' }]
+	}
+	cmd.run(['app', '-an', 'v'])!
+	assert cmd.flag('all')!.get_bool()!
+	assert cmd.flag('name')!.get_string()! == 'v'
+
+	mut attached := Command{
+		name:       'app'
+		execute_fn: mark_executed
+		flags:      [Flag{ name: 'all', abbrev: 'a', flag: .bool }, Flag{ name: 'name', abbrev: 'n' }]
+	}
+	attached.run(['app', '-anvalue'])!
+	assert attached.flag('all')!.get_bool()!
+	assert attached.flag('name')!.get_string()! == 'value'
+}
+
 fn test_positional_args() ! {
 	mut cmd := Command{
 		name:      'app'

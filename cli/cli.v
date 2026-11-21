@@ -398,21 +398,27 @@ fn (mut c Command) parse_long(token string, args []string, pos int) !int {
 
 fn (mut c Command) parse_short(token string, args []string, pos int) !int {
 	bytes := token.bytes()
-	// A cluster like -abc is split into -a -b -c when every letter is known.
+	// A cluster like -abc is split into -a -b -c. A value-taking flag is the
+	// last one: its value is the rest of the token or the next argument.
 	if bytes.len > 2 && !token.contains('=') {
-		mut recognised := true
 		for j in 1 .. bytes.len {
-			if c.find_short(bytes[j]) < 0 {
-				recognised = false
-				break
+			ch := bytes[j]
+			idx := c.find_short(ch)
+			if idx < 0 {
+				return error('unknown flag `-${ch.ascii_str()}` for `${c.full_name()}`')
 			}
-		}
-		if recognised {
-			for j in 1 .. bytes.len {
-				c.apply_short(bytes[j], '', []string{}, 0)!
+			if c.all_flags[idx].flag == .bool {
+				c.apply_short(ch, '', []string{}, 0)!
+				continue
+			}
+			if j + 1 < bytes.len {
+				c.apply_short_value(ch, '-${ch.ascii_str()}', token[j + 1..])!
+			} else {
+				return c.apply_short(ch, token, args, pos)
 			}
 			return 1
 		}
+		return 1
 	}
 	return c.apply_short(bytes[1], token, args, pos)
 }
@@ -427,16 +433,20 @@ fn (c &Command) find_short(ch u8) int {
 }
 
 fn (mut c Command) apply_short(ch u8, token string, args []string, pos int) !int {
+	name := if token.len > 0 { token } else { '-${ch.ascii_str()}' }
+	next := if pos + 1 < args.len { args[pos + 1] } else { '' }
+	return c.apply_short_value(ch, name, next)
+}
+
+fn (mut c Command) apply_short_value(ch u8, name string, next string) !int {
 	idx := c.find_short(ch)
 	if idx < 0 {
 		return error('unknown flag `-${ch.ascii_str()}` for `${c.full_name()}`')
 	}
 	mut f := &c.all_flags[idx]
-	name := if token.len > 0 { token } else { '-${ch.ascii_str()}' }
-	next := if pos + 1 < args.len { args[pos + 1] } else { '' }
 	consumed := f.set_value(name, next)!
 	f.found = true
-	if f.deprecated != '' {
+	if f.deprecated != '' && !c.silence_errors {
 		c.write_err('flag `${f.name}` is deprecated: ${f.deprecated}\n')
 	}
 	if f.name == 'help' && f.value[0] == 'true' {
