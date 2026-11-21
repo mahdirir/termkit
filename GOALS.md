@@ -22,7 +22,7 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - Emit only changed cells, with cursor movement and style resets.
    - Alternate screen, synchronized updates, configurable FPS, forced repaint.
    - Color profile detection: ascii, ANSI, ANSI-256, truecolor, with
-     `NO_COLOR` respected.
+     `NO_COLOR` respected. Truecolor styles are downgraded automatically.
 
 3. **Input parity.**
    - Key names, modifiers, repeated keys, mouse buttons and scroll, resize.
@@ -50,6 +50,7 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - Nested commands with persistent and local flags, aliases and groups.
    - Typed flags with shorthands, clustered short flags, `--no-x` negation,
      `--` terminator, hidden/deprecated flags, choice sets and validators.
+     Numeric getters reject malformed values instead of returning zero.
    - Argument validators, hooks, `on_initialize`, context cancellation.
    - Generated help, man pages, version output, `did you mean` suggestions
      for both flags and sub-commands.

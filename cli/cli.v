@@ -1,5 +1,7 @@
 module cli
 
+import strconv
+
 // FlagType is the kind of value a flag accepts.
 pub enum FlagType {
 	bool
@@ -59,7 +61,21 @@ pub fn (f &Flag) get_int() !int {
 		return error('${f.name}: expected int flag')
 	}
 	v := f.get_value_or_default()
-	return if v.len > 0 { v[0].int() } else { 0 }
+	if v.len == 0 {
+		return 0
+	}
+	return strconv.atoi(v[0]) or { return error('${f.name}: `${v[0]}` is not an int') }
+}
+
+pub fn (f &Flag) get_ints() ![]int {
+	if f.flag != .int_array {
+		return error('${f.name}: expected int_array flag')
+	}
+	mut out := []int{}
+	for value in f.get_value_or_default() {
+		out << strconv.atoi(value) or { return error('${f.name}: `${value}` is not an int') }
+	}
+	return out
 }
 
 pub fn (f &Flag) get_float() !f64 {
@@ -67,7 +83,25 @@ pub fn (f &Flag) get_float() !f64 {
 		return error('${f.name}: expected float flag')
 	}
 	v := f.get_value_or_default()
-	return if v.len > 0 { v[0].f64() } else { 0.0 }
+	if v.len == 0 {
+		return 0.0
+	}
+	return strconv.atof64(v[0], strconv.AtoF64Param{}) or {
+		return error('${f.name}: `${v[0]}` is not a float')
+	}
+}
+
+pub fn (f &Flag) get_floats() ![]f64 {
+	if f.flag != .float_array {
+		return error('${f.name}: expected float_array flag')
+	}
+	mut out := []f64{}
+	for value in f.get_value_or_default() {
+		out << strconv.atof64(value, strconv.AtoF64Param{}) or {
+			return error('${f.name}: `${value}` is not a float')
+		}
+	}
+	return out
 }
 
 pub fn (f &Flag) get_strings() ![]string {

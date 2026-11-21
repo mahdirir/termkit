@@ -190,6 +190,27 @@ fn test_injectable_help_output() {
 	assert test_output.contains('demo')
 }
 
+fn int_parse_fails(f Flag) bool {
+	f.get_int() or { return true }
+	return false
+}
+
+fn float_parse_fails(f Flag) bool {
+	f.get_float() or { return true }
+	return false
+}
+
+fn test_typed_flags_reject_bad_values() {
+	mut bad_int := Flag{ name: 'count', flag: .int, value: ['oops'] }
+	assert int_parse_fails(bad_int)
+	mut bad_float := Flag{ name: 'ratio', flag: .float, value: ['abc'] }
+	assert float_parse_fails(bad_float)
+	mut good_ints := Flag{ name: 'ids', flag: .int_array, value: ['1', '2'] }
+	assert good_ints.get_ints() or { []int{} } == [1, 2]
+	mut good_floats := Flag{ name: 'xs', flag: .float_array, value: ['1.5', '2.5'] }
+	assert good_floats.get_floats() or { []f64{} } == [1.5, 2.5]
+}
+
 fn test_silence_usage() {
 	test_output = ''
 	mut cmd := Command{

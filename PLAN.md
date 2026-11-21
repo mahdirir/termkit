@@ -106,6 +106,7 @@ termkit/
 - [x] Mouse scroll/click handling in list, viewport and file picker.
 - [x] Masked text input; list multi-select.
 - [x] Style color helpers: `Rgb`, `from_hex`, ANSI-256 parameters.
+- [x] Renderer downgrades truecolor to ANSI-256 and basic ANSI.
 
 ### M5 — CLI core (mostly complete)
 
@@ -121,6 +122,7 @@ termkit/
       streams; read-only `get_flag`; deprecated-flag warnings.
 - [x] Unknown-command suggestions and tree-aware `__complete` traversal.
 - [x] `silence_usage` and `silence_errors` options.
+- [x] Typed getters reject bad values; `get_ints`/`get_floats` added.
 - [x] Man page generation.
 - [ ] Injectable streams, context cancellation.
 

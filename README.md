@@ -33,7 +33,7 @@ v install metif12.termkit
 | `termkit.style` | Foreground/background, RGB/hex/ANSI-256 colors, attributes, borders, padding, margins, alignment |
 | `termkit.widgets` | Text input, viewport, list, table, file picker, focus groups, spinner, progress, timer, help |
 | `termkit.layout` | Rectangles, constraints, horizontal/vertical composition |
-| `termkit.cli` | Commands, flags, validation, flag groups, help/man, suggestions, completion |
+| `termkit.cli` | Commands, typed flags, validation, flag groups, help/man, suggestions, completion |
 
 ## Quickstart: an MVU app
 
@@ -130,8 +130,9 @@ v run examples/cli_app.v -- --help
   process-wide table, so a per-keystroke closure would pin memory forever.
   `batch`, `sequence`, `tick` and `every` are data, not captured functions.
 - **Rendering is diffed.** A cell grid is compared against the previous frame
-  so only changed cells are emitted. The grid resizes on `WindowSizeMsg`.
-  This avoids the tearing described in the `term.ui` README.
+  so only changed cells are emitted. The grid resizes on `WindowSizeMsg` and
+  truecolor styles are downgraded on ANSI-256/16-color terminals. This avoids
+  the tearing described in the `term.ui` README.
 - **No new C dependencies.** Everything is written in V and builds on the
   platform support already present in `term.ui`.
 - **Testable without a terminal.** Rendering, widgets, parsing, help and

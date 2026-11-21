@@ -60,6 +60,20 @@ fn test_wide_glyph_uses_two_cells() {
 	assert r.frame() == ''
 }
 
+fn test_rgb_downgrade() {
+	mut r := new_renderer(2, 1, .ansi256)
+	r.sync_updates = false
+	r.draw_text(0, 0, '\x1b[38;2;255;0;0mx', '', '', 0)
+	out := r.frame()
+	assert out.contains('\x1b[38;5;196m')
+	assert !out.contains('38;2;')
+	mut basic := new_renderer(2, 1, .ansi)
+	basic.sync_updates = false
+	basic.draw_text(0, 0, '\x1b[48;2;0;0;255mx', '', '', 0)
+	basic_out := basic.frame()
+	assert basic_out.contains('\x1b[44m')
+}
+
 fn test_resize() {
 	mut r := new_renderer(4, 1, .ansi)
 	r.sync_updates = false

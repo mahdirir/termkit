@@ -338,14 +338,100 @@ pub fn (mut r Renderer) frame() string {
 	return out
 }
 
+fn params_rgb(params string) ?[]int {
+	parts := params.split(';')
+	if parts.len < 5 || (parts[0] != '38' && parts[0] != '48') || parts[1] != '2' {
+		return none
+	}
+	return [parts[2].int(), parts[3].int(), parts[4].int()]
+}
+
+// rgb_to_ansi256 maps a 24-bit color to the xterm 256-color cube and greys.
+pub fn rgb_to_ansi256(r int, g int, b int) u8 {
+	rr := if r < 0 {
+		0
+	} else if r > 255 {
+		255
+	} else {
+		r
+	}
+	gg := if g < 0 {
+		0
+	} else if g > 255 {
+		255
+	} else {
+		g
+	}
+	bb := if b < 0 {
+		0
+	} else if b > 255 {
+		255
+	} else {
+		b
+	}
+	if rr == gg && gg == bb {
+		if rr < 8 {
+			return 16
+		}
+		if rr > 248 {
+			return 231
+		}
+		return u8(232 + (rr - 8) / 10)
+	}
+	return u8(16 + 36 * (rr / 51) + 6 * (gg / 51) + (bb / 51))
+}
+
+const basic_palette = [u32(0), 0x800000, 0x008000, 0x808000, 0x000080, 0x800080, 0x008080, 0xc0c0c0]
+
+// rgb_to_basic maps a 24-bit color to one of the eight ANSI base colors.
+pub fn rgb_to_basic(r int, g int, b int) u8 {
+	mut best := 0
+	mut best_distance := -1
+	for i, color in basic_palette {
+		dr := r - int((color >> 16) & 0xff)
+		dg := g - int((color >> 8) & 0xff)
+		db := b - int(color & 0xff)
+		distance := dr * dr + dg * dg + db * db
+		if best_distance == -1 || distance < best_distance {
+			best_distance = distance
+			best = i
+		}
+	}
+	return u8(best)
+}
+
+fn adapt_color(params string, profile ColorProfile) string {
+	if params == '' {
+		return ''
+	}
+	rgb := params_rgb(params) or { return params }
+	r, g, b := rgb[0], rgb[1], rgb[2]
+	base := if params.starts_with('38') { u8(38) } else { u8(48) }
+	match profile {
+		.truecolor {
+			return params
+		}
+		.ansi256 {
+			return '${base};5;${rgb_to_ansi256(r, g, b)}'
+		}
+		.ansi {
+			offset := if base == 38 { u8(30) } else { u8(40) }
+			return '${offset + rgb_to_basic(r, g, b)}'
+		}
+		else {
+			return ''
+		}
+	}
+}
+
 fn style_for(c Cell, profile ColorProfile) string {
 	mut s := '\x1b[0m'
 	if profile != .ascii {
 		if c.fg != '' {
-			s += '\x1b[${c.fg}m'
+			s += '\x1b[${adapt_color(c.fg, profile)}m'
 		}
 		if c.bg != '' {
-			s += '\x1b[${c.bg}m'
+			s += '\x1b[${adapt_color(c.bg, profile)}m'
 		}
 	}
 	if c.attrs & attr_bold != 0 {
