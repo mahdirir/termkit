@@ -19,11 +19,11 @@ Phase 1 of 6: scaffolding. No runtime code exists yet.
   (`7ede4c6133`), reserved as the build harness. The main `v` checkout is 404
   commits behind and is not used.
 - `C:\Users\MR\Projects\termkit` — the module repository (this repo).
-- The master bootstrap was attempted with `makev.bat --local -gcc` but stopped
-  during `v_stage.c` generation while other GCC builds were running on the
-  host. Until it is retried in a quiet window, development and tests use the
-  installed V 0.5.2 compiler (`C:\Users\MR\v\.bin\v`), which builds pure-V
-  stdlib code. No compiler sources are changed, so `v self` is not needed.
+- The `makev.bat --local -gcc` bootstrap stalled during `v_stage.c` generation
+  while other GCC builds were running. A lighter self-hosted build succeeded:
+  `v_master.exe` in the harness reports `V 0.5.2 7ede4c6`, matching the
+  worktree HEAD. All validation was re-run with that compiler and passed.
+- No compiler sources are changed, so `v self` is not needed.
 - All builds use a private `TMPDIR` under
   `LocalAppData\Temp\opencode\termkit`, explicit `VJOBS` and `-memory-limit`.
 
@@ -57,8 +57,8 @@ termkit/
 - [x] `README.md`, `GOALS.md`, `PLAN.md`.
 - [x] Verify `check-md` on all three Markdown files (0 warnings, 0 errors).
 - [x] Initial commit.
-- [ ] Retry the master-based bootstrap when the host is quiet, then re-run
-      `check-md` with that compiler.
+- [x] Retry the master-based bootstrap and re-run validation with the
+      resulting `v_master.exe` (`7ede4c6`).
 
 ### M2 — MVU core (mostly complete)
 
