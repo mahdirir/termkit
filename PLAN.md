@@ -63,11 +63,13 @@ termkit/
 ### M2 — MVU core (mostly complete)
 
 - [x] `Msg` marker interface; `KeyMsg`, `MouseMsg`, `WindowSizeMsg`, `QuitMsg`,
-      `TickMsg`, `PasteMsg`, `ErrorMsg`, `TitleMsg`, `WriteLineMsg`, `NoopMsg`.
+      `TickMsg`, `PasteMsg`, `ErrorMsg`, `TitleMsg`, `WriteLineMsg`, `LogMsg`,
+      `NoopMsg`.
 - [x] `Cmd` sum type: `NoCmd`, `MsgCmd`, `CmdFn`, `BatchCmd`, `SequenceCmd`,
       `TickCmd`, `EveryCmd`.
 - [x] Helpers: `no_cmd`, `msg_cmd`, `cmd_fn`, `batch`, `sequence`, `tick`,
-      `every`, `quit`, `set_window_title`, `write_line`, `delivered_msgs`.
+      `every`, `quit`, `set_window_title`, `write_line`, `log_to_file`,
+      `delivered_msgs`.
 - [x] `Model` interface and `Program`/`new_program(...).run() !`.
 - [x] `ProgramOpts`: alternate screen, mouse mode, raw mode, FPS, title,
       hide cursor, without renderer.
@@ -107,6 +109,7 @@ termkit/
 - [x] Masked text input; list multi-select.
 - [x] Style color helpers: `Rgb`, `from_hex`, ANSI-256 parameters.
 - [x] Renderer downgrades truecolor to ANSI-256 and basic ANSI.
+- [x] Tabs and collapsible Tree widgets.
 
 ### M5 — CLI core (mostly complete)
 
@@ -123,6 +126,7 @@ termkit/
 - [x] Unknown-command suggestions and tree-aware `__complete` traversal.
 - [x] `silence_usage` and `silence_errors` options.
 - [x] Typed getters reject bad values; `get_ints`/`get_floats` added.
+- [x] Persistent parent hooks (before/after) for command trees.
 - [x] Man page generation.
 - [ ] Injectable streams, context cancellation.
 

@@ -229,7 +229,13 @@ pub mut:
 	before            Hook = unsafe { nil }
 	execute_fn        Hook = unsafe { nil }
 	after             Hook = unsafe { nil }
-	init_fn           ?fn ()
+	// persistent_before runs before before hooks for this command and every
+	// descendant, from the root command down to the executed one.
+	persistent_before Hook = unsafe { nil }
+	// persistent_after runs after after hooks for this command and every
+	// descendant, from the executed command up to the root.
+	persistent_after Hook = unsafe { nil }
+	init_fn          ?fn ()
 	// The *_with_fn hooks receive the parsed command, so callbacks can read
 	// flags without globals. They take precedence over the plain hooks.
 	before_with_fn  HookWithCommand = unsafe { nil }
@@ -439,6 +445,44 @@ fn (mut c Command) apply_short(ch u8, token string, args []string, pos int) !int
 	return 1 + consumed
 }
 
+// persistent_before_hooks returns the persistent before hooks from the root
+// ancestor down to this command.
+fn (c &Command) persistent_before_hooks() []Hook {
+	mut chain := []&Command{}
+	mut node := c.parent
+	for !isnil(node) {
+		chain << node
+		node = node.parent
+	}
+	mut out := []Hook{}
+	for i := chain.len - 1; i >= 0; i-- {
+		if !isnil(chain[i].persistent_before) {
+			out << chain[i].persistent_before
+		}
+	}
+	if !isnil(c.persistent_before) {
+		out << c.persistent_before
+	}
+	return out
+}
+
+// persistent_after_hooks returns the persistent after hooks from this command
+// up to the root ancestor.
+fn (c &Command) persistent_after_hooks() []Hook {
+	mut out := []Hook{}
+	if !isnil(c.persistent_after) {
+		out << c.persistent_after
+	}
+	mut node := c.parent
+	for !isnil(node) {
+		if !isnil(node.persistent_after) {
+			out << node.persistent_after
+		}
+		node = node.parent
+	}
+	return out
+}
+
 fn (mut c Command) finish() ! {
 	if c.show_help {
 		c.write_out(c.help_message())
@@ -502,6 +546,9 @@ fn (mut c Command) finish() ! {
 		}
 		else {}
 	}
+	for hook in c.persistent_before_hooks() {
+		hook()!
+	}
 	if !isnil(c.before_with_fn) {
 		c.before_with_fn(*c)!
 	} else if !isnil(c.before) {
@@ -525,6 +572,9 @@ fn (mut c Command) finish() ! {
 		c.after_with_fn(*c)!
 	} else if !isnil(c.after) {
 		c.after()!
+	}
+	for hook in c.persistent_after_hooks() {
+		hook()!
 	}
 }
 

@@ -185,6 +185,53 @@ fn test_cursor_blink() {
 	assert cursor.view() == ' '
 }
 
+fn test_tabs_navigation() {
+	mut tabs := Tabs{}
+	tabs.set_tabs(['one', 'two', 'three'])
+	assert tabs.active_name() == 'one'
+	assert tabs.view().contains('[one]')
+	tabs.update(termkit.KeyMsg{ key: termkit.key_right })
+	assert tabs.active_name() == 'two'
+	tabs.update(termkit.KeyMsg{ key: termkit.key_end })
+	assert tabs.active_name() == 'three'
+	tabs.update(termkit.KeyMsg{ key: termkit.key_home })
+	assert tabs.active_name() == 'one'
+	tabs.select(1)
+	assert tabs.view().contains('[two]')
+	assert tabs.view().contains(' one ')
+}
+
+fn test_tree_navigation() {
+	mut tree := Tree{}
+	tree.add_node('root', -1)
+	tree.add_node('child a', 0)
+	tree.add_node('grandchild', 1)
+	tree.add_node('child b', 0)
+	assert tree.selected_label() == 'root'
+	assert tree.view().contains('root')
+	tree.update(termkit.KeyMsg{ key: termkit.key_right })
+	assert tree.selected_label() == 'child a'
+	tree.update(termkit.KeyMsg{ key: termkit.key_right })
+	assert tree.selected_label() == 'grandchild'
+	tree.update(termkit.KeyMsg{ key: termkit.key_left })
+	assert tree.selected_label() == 'child a'
+	tree.update(termkit.KeyMsg{ key: termkit.key_left })
+	assert tree.selected_label() == 'child a'
+	assert !tree.view().contains('grandchild')
+	// A second left moves to the parent; a third collapses the root.
+	tree.update(termkit.KeyMsg{ key: termkit.key_left })
+	assert tree.selected_label() == 'root'
+	tree.update(termkit.KeyMsg{ key: termkit.key_left })
+	assert !tree.view().contains('child a')
+	tree.update(termkit.KeyMsg{ key: termkit.key_right })
+	assert tree.view().contains('child a')
+	// child a is still collapsed, so the next visible node is child b.
+	tree.update(termkit.KeyMsg{ key: termkit.key_down })
+	assert tree.selected_label() == 'child a'
+	tree.update(termkit.KeyMsg{ key: termkit.key_down })
+	assert tree.selected_label() == 'child b'
+}
+
 fn test_help_view() {
 	help := Help{ bindings: [Binding{ key: 'q', description: 'quit' }] }
 	assert help.view().contains('q')

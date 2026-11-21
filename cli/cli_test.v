@@ -5,7 +5,28 @@ __global (
 	test_executed   bool
 	test_flag_value string
 	test_output     string
+	test_hook_order []string
 )
+
+fn root_pre() ! {
+	test_hook_order << 'root_pre'
+}
+
+fn sub_pre() ! {
+	test_hook_order << 'sub_pre'
+}
+
+fn root_post() ! {
+	test_hook_order << 'root_post'
+}
+
+fn sub_post() ! {
+	test_hook_order << 'sub_post'
+}
+
+fn sub_execute() ! {
+	test_hook_order << 'execute'
+}
 
 fn mark_executed() ! {
 	test_executed = true
@@ -13,6 +34,23 @@ fn mark_executed() ! {
 
 fn capture_output(s string) {
 	test_output += s
+}
+
+fn test_persistent_parent_hooks() ! {
+	test_hook_order = []string{}
+	mut root := Command{
+		name:              'app'
+		persistent_before: root_pre
+		persistent_after:  root_post
+		commands:          [Command{
+			name:              'sub'
+			execute_fn:        sub_execute
+			persistent_before: sub_pre
+			persistent_after:  sub_post
+		}]
+	}
+	root.run(['app', 'sub'])!
+	assert test_hook_order == ['root_pre', 'sub_pre', 'execute', 'sub_post', 'root_post']
 }
 
 fn test_string_flag() ! {

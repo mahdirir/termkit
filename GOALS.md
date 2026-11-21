@@ -35,7 +35,7 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - Scrollable viewport, list with filtering and multi-select, table, file
      picker.
    - Spinner, progress bar, paginator, confirm prompt, stopwatch/timer,
-     help/keybinding display, cursor.
+     help/keybinding display, cursor, tabs and a collapsible tree.
    - Tab/Shift+Tab focus groups over any `Focusable` widget.
    - Mouse scroll and click handling in lists, viewports and the file picker.
    - Every component is independently testable and composable.
@@ -51,7 +51,8 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - Typed flags with shorthands, clustered short flags, `--no-x` negation,
      `--` terminator, hidden/deprecated flags, choice sets and validators.
      Numeric getters reject malformed values instead of returning zero.
-   - Argument validators, hooks, `on_initialize`, context cancellation.
+   - Argument validators, hooks, `on_initialize`, context cancellation, and
+     persistent parent hooks that wrap every descendant command.
    - Generated help, man pages, version output, `did you mean` suggestions
      for both flags and sub-commands.
    - Shell completion generation and a dynamic `__complete` protocol that
