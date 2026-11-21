@@ -302,6 +302,8 @@ fn test_manpage() {
 	page := cmd.manpage()
 	assert page.contains('.Nm app')
 	assert page.contains('a name')
+	assert page.contains('.Bl -tag')
+	assert page.contains('.El')
 }
 
 fn test_completion_scripts() {

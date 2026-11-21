@@ -27,24 +27,30 @@ pub fn (c &Command) manpage() string {
 	flags := if c.all_flags.len > 0 { c.all_flags } else { c.flags }
 	if flags.len > 0 {
 		out << '.Sh FLAGS'
+		out << '.Bl -tag -width 12n'
 		for f in flags {
 			if f.hidden {
 				continue
 			}
-			out << '.It Fl -${f.name}'
-			if f.abbrev != '' {
-				out << '.It Fl ${f.abbrev}'
+			label := if f.abbrev != '' {
+				'.It Fl -${f.name} , Fl ${f.abbrev}'
+			} else {
+				'.It Fl -${f.name}'
 			}
+			out << label
 			out << f.description
 		}
+		out << '.El'
 	}
 	visible := c.commands.filter(!it.hidden)
 	if visible.len > 0 {
 		out << '.Sh COMMANDS'
+		out << '.Bl -tag -width 12n'
 		for sub in visible {
 			out << '.It Nm ${sub.name}'
 			out << sub.description
 		}
+		out << '.El'
 	}
 	return out.join('\n') + '\n'
 }

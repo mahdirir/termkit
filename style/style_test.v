@@ -26,6 +26,12 @@ fn test_render_border() {
 	assert out.ends_with('┘\x1b[0m')
 }
 
+fn test_render_utf8_title() {
+	s := Style{ border: .single, title: '你好世界', width: 8 }
+	out := s.render('x')
+	assert out.contains('你好')
+}
+
 fn test_color_helpers() {
 	c := from_hex('#1a2b3c') or {
 		assert false

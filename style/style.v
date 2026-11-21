@@ -92,6 +92,28 @@ fn repeat(s string, n int) string {
 	return out
 }
 
+// truncate_width shortens s to at most width visible cells on rune boundaries.
+fn truncate_width(s string, width int) string {
+	if width <= 0 {
+		return ''
+	}
+	if term.printable_len(s) <= width {
+		return s
+	}
+	mut out := ''
+	mut used := 0
+	for r in s.runes() {
+		rs := r.str()
+		w := term.printable_len(rs)
+		if used + w > width {
+			break
+		}
+		out += rs
+		used += w
+	}
+	return out
+}
+
 // render lays out text with margin, padding, alignment and an optional
 // border. The returned string contains SGR codes the termkit renderer parses.
 pub fn (s Style) render(text string) string {
@@ -176,8 +198,8 @@ fn (s Style) render_block(text string) string {
 	}
 	g := glyphs_for(s.border)
 	mut title := s.title
-	if title.len > inner - 2 && inner > 4 {
-		title = title[..inner - 2]
+	if inner > 4 {
+		title = truncate_width(title, inner - 2)
 	}
 	top_label := if title == '' { '' } else { ' ' + title + ' ' }
 	mut top_fill := inner - term.printable_len(top_label)

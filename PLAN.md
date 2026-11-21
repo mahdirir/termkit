@@ -112,6 +112,7 @@ termkit/
 - [x] Renderer keeps combining marks with their base glyph.
 - [x] Rune-aware cursors in text input/area; TextArea multi-line paste.
 - [x] `hstack`/`vstack` accumulate sizes for default-position rects.
+- [x] Border titles truncate on rune boundaries; man pages emit valid mdoc lists.
 - [x] Tabs and collapsible Tree widgets.
 
 ### M5 — CLI core (complete)
