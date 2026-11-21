@@ -60,6 +60,13 @@ fn test_wide_glyph_uses_two_cells() {
 	assert r.frame() == ''
 }
 
+fn test_rgb_to_ansi256_greys() {
+	assert rgb_to_ansi256(0, 0, 0) == 16
+	assert rgb_to_ansi256(8, 8, 8) == 232
+	assert rgb_to_ansi256(248, 248, 248) == 255
+	assert rgb_to_ansi256(250, 250, 250) == 231
+}
+
 fn test_rgb_downgrade() {
 	mut r := new_renderer(2, 1, .ansi256)
 	r.sync_updates = false

@@ -111,6 +111,7 @@ termkit/
 - [x] Style color helpers: `Rgb`, `from_hex`, ANSI-256 parameters.
 - [x] Renderer downgrades truecolor to ANSI-256 and basic ANSI.
 - [x] Renderer keeps combining marks with their base glyph.
+- [x] ANSI-256 grey mapping clamps at index 255 (no u8 overflow).
 - [x] Rune-aware cursors in text input/area; TextArea multi-line paste.
 - [x] `hstack`/`vstack` accumulate sizes for default-position rects.
 - [x] Border titles truncate on rune boundaries; man pages emit valid mdoc lists.

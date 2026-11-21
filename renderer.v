@@ -390,7 +390,8 @@ pub fn rgb_to_ansi256(r int, g int, b int) u8 {
 		if rr > 248 {
 			return 231
 		}
-		return u8(232 + (rr - 8) / 10)
+		grey := 232 + (rr - 8) / 10
+		return u8(if grey > 255 { 255 } else { grey })
 	}
 	return u8(16 + 36 * (rr / 51) + 6 * (gg / 51) + (bb / 51))
 }
