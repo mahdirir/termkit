@@ -12,6 +12,7 @@ pub enum KeyEventKind {
 }
 
 // Modifiers records the control keys held during a key or mouse event.
+// Modifiers records the control keys held during a key or mouse event.
 @[flag]
 pub enum Modifiers {
 	ctrl

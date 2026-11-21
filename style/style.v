@@ -3,9 +3,13 @@ module style
 import term
 import termkit.layout
 
+// attr_bold marks text as bold.
 pub const attr_bold = u8(1)
+// attr_italic marks text as italic.
 pub const attr_italic = u8(2)
+// attr_underline marks text as underlined.
 pub const attr_underline = u8(4)
+// attr_reverse marks text as reverse video.
 pub const attr_reverse = u8(8)
 
 // BorderKind selects the characters used for a box border.

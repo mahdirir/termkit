@@ -10,9 +10,13 @@ pub enum ColorProfile {
 	truecolor
 }
 
+// attr_bold marks a cell as bold.
 pub const attr_bold = u8(1)
+// attr_italic marks a cell as italic.
 pub const attr_italic = u8(2)
+// attr_underline marks a cell as underlined.
 pub const attr_underline = u8(4)
+// attr_reverse marks a cell as reverse video.
 pub const attr_reverse = u8(8)
 
 // color_profile_from_env derives a profile from the usual environment

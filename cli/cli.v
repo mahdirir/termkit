@@ -40,6 +40,7 @@ pub fn (f &Flag) is_found() bool {
 	return f.found
 }
 
+// get_bool returns the boolean value of the flag.
 pub fn (f &Flag) get_bool() !bool {
 	if f.flag != .bool {
 		return error('${f.name}: expected bool flag')
@@ -48,6 +49,7 @@ pub fn (f &Flag) get_bool() !bool {
 	return v.len > 0 && v[0] == 'true'
 }
 
+// get_string returns the string value of the flag.
 pub fn (f &Flag) get_string() !string {
 	if f.flag != .string {
 		return error('${f.name}: expected string flag')
@@ -56,6 +58,7 @@ pub fn (f &Flag) get_string() !string {
 	return if v.len > 0 { v[0] } else { '' }
 }
 
+// get_int returns the integer value of the flag, rejecting malformed input.
 pub fn (f &Flag) get_int() !int {
 	if f.flag != .int {
 		return error('${f.name}: expected int flag')
@@ -67,6 +70,7 @@ pub fn (f &Flag) get_int() !int {
 	return strconv.atoi(v[0]) or { return error('${f.name}: `${v[0]}` is not an int') }
 }
 
+// get_ints returns all integer values of a repeatable flag.
 pub fn (f &Flag) get_ints() ![]int {
 	if f.flag != .int_array {
 		return error('${f.name}: expected int_array flag')
@@ -78,6 +82,7 @@ pub fn (f &Flag) get_ints() ![]int {
 	return out
 }
 
+// get_float returns the floating point value of the flag.
 pub fn (f &Flag) get_float() !f64 {
 	if f.flag != .float {
 		return error('${f.name}: expected float flag')
@@ -91,6 +96,7 @@ pub fn (f &Flag) get_float() !f64 {
 	}
 }
 
+// get_floats returns all floating point values of a repeatable flag.
 pub fn (f &Flag) get_floats() ![]f64 {
 	if f.flag != .float_array {
 		return error('${f.name}: expected float_array flag')
@@ -104,6 +110,7 @@ pub fn (f &Flag) get_floats() ![]f64 {
 	return out
 }
 
+// get_strings returns all string values of a repeatable flag.
 pub fn (f &Flag) get_strings() ![]string {
 	if f.flag != .string_array {
 		return error('${f.name}: expected string_array flag')
@@ -111,6 +118,8 @@ pub fn (f &Flag) get_strings() ![]string {
 	return f.get_value_or_default()
 }
 
+// get_value_or_default returns the supplied values, or the defaults when the
+// flag was not present on the command line.
 pub fn (f &Flag) get_value_or_default() []string {
 	if f.value.len > 0 {
 		return f.value
@@ -167,6 +176,7 @@ fn (mut f Flag) set_value(token string, next string) !int {
 	return if token.contains('=') { 0 } else { 1 }
 }
 
+// get returns the flag with the given name or abbreviation.
 pub fn (flags []Flag) get(name string) !Flag {
 	for f in flags {
 		if f.name == name || f.abbrev == name {

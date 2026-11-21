@@ -2,21 +2,37 @@ module termkit
 
 import term.ui as tui
 
+// key_enter is the name of the Enter key.
 pub const key_enter = 'enter'
+// key_tab is the name of the Tab key.
 pub const key_tab = 'tab'
+// key_esc is the name of the Escape key.
 pub const key_esc = 'esc'
+// key_space is the name of the Space key.
 pub const key_space = ' '
+// key_backspace is the name of the Backspace key.
 pub const key_backspace = 'backspace'
+// key_delete is the name of the Delete key.
 pub const key_delete = 'delete'
+// key_up is the name of the Up arrow.
 pub const key_up = 'up'
+// key_down is the name of the Down arrow.
 pub const key_down = 'down'
+// key_left is the name of the Left arrow.
 pub const key_left = 'left'
+// key_right is the name of the Right arrow.
 pub const key_right = 'right'
+// key_home is the name of the Home key.
 pub const key_home = 'home'
+// key_end is the name of the End key.
 pub const key_end = 'end'
+// key_page_up is the name of the Page Up key.
 pub const key_page_up = 'pgup'
+// key_page_down is the name of the Page Down key.
 pub const key_page_down = 'pgdown'
+// key_insert is the name of the Insert key.
 pub const key_insert = 'insert'
+// key_ctrl_c is the name of the Ctrl+C key combination.
 pub const key_ctrl_c = 'ctrl+c'
 
 // key_name converts a term.ui key code to a stable name.

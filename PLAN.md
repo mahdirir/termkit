@@ -133,6 +133,7 @@ termkit/
 - [x] Examples: `examples/counter.v`, `examples/cli_app.v`,
       `examples/widgets.v`, `examples/focus.v`.
 - [x] Full `v fmt -l`, `v check-md`, `v -silent test .` pass locally.
+- [x] Every public symbol has a doc comment; `v doc -all termkit` succeeds.
 - [x] Golden completion fixture for the bash script.
 - [ ] Push to `metif12/termkit` and VPM registration after approval.
 
