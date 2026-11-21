@@ -112,6 +112,7 @@ termkit/
 - [x] Renderer downgrades truecolor to ANSI-256 and basic ANSI.
 - [x] Renderer keeps combining marks with their base glyph.
 - [x] ANSI-256 grey mapping clamps at index 255 (no u8 overflow).
+- [x] Renderer skips CSI/OSC escapes that are not SGR instead of swallowing text.
 - [x] Rune-aware cursors in text input/area; TextArea multi-line paste.
 - [x] `hstack`/`vstack` accumulate sizes for default-position rects.
 - [x] Border titles truncate on rune boundaries; man pages emit valid mdoc lists.

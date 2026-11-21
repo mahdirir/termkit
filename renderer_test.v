@@ -93,6 +93,19 @@ fn test_resize() {
 	assert r.frame().contains('xy')
 }
 
+fn test_non_sgr_escapes_are_skipped() {
+	mut r := new_renderer(8, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, '\x1b[Ax', '', '', 0)
+	assert r.cells[0].text == 'x'
+	r.clear()
+	r.draw_text(0, 0, '\x1b]0;title\x07y', '', '', 0)
+	assert r.cells[0].text == 'y'
+	r.clear()
+	r.draw_text(0, 0, '\x1b7z', '', '', 0)
+	assert r.cells[0].text == 'z'
+}
+
 fn test_combining_marks_stay_with_base() {
 	mut r := new_renderer(8, 1, .ansi)
 	r.sync_updates = false

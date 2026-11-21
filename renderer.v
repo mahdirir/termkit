@@ -137,25 +137,40 @@ pub fn (mut r Renderer) draw_text(x int, y int, text string, fg string, bg strin
 	mut state := SgrState{ fg: fg, bg: bg, attrs: attrs }
 	mut cluster := ''
 	mut cluster_width := 0
-	mut in_sgr := false
-	mut sgr := ''
+	mut in_esc := false
+	mut esc := ''
 	for ch in text.runes() {
+		if in_esc {
+			esc += ch.str()
+			if esc.starts_with('[') {
+				// CSI ends at the first final byte in @..~. SGR is `m`.
+				if esc.len >= 2 && ch >= `@` && ch <= `~` {
+					if ch == `m` {
+						apply_sgr(esc, mut state)
+					}
+					in_esc = false
+					esc = ''
+				}
+			} else if esc.starts_with(']') {
+				// OSC ends at BEL or at the backslash of an ST sequence.
+				if ch == 7 || (ch == `\\` && esc.len >= 2 && esc[esc.len - 2] == 27) {
+					in_esc = false
+					esc = ''
+				}
+			} else {
+				// Two-character escapes such as ESC 7 or ESC 8.
+				in_esc = false
+				esc = ''
+			}
+			continue
+		}
 		if ch == 27 {
 			r.flush_cluster(cluster, cx, cy, state)
 			cx += cluster_width
 			cluster = ''
 			cluster_width = 0
-			in_sgr = true
-			sgr = ''
-			continue
-		}
-		if in_sgr {
-			sgr += ch.str()
-			if ch == `m` {
-				apply_sgr(sgr, mut state)
-				in_sgr = false
-				sgr = ''
-			}
+			in_esc = true
+			esc = ''
 			continue
 		}
 		if ch == `\n` {
