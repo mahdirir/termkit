@@ -115,11 +115,21 @@ fn main() {
   completion support.
 - `examples/widgets.v` — a filterable list with a text input and help bar.
 - `examples/focus.v` — tab navigation between text inputs and a file picker.
+- `examples/tabs_tree.v` — tabs plus a collapsible, navigable tree.
+- `examples/timer.v` — stopwatch and countdown driven by an `every` command.
+- `examples/style.v` — non-interactive styling and layout, safe to run in CI.
+- `examples/headless.v` — MVU driven by injected messages, no TTY required.
+- `examples/cli_complete.v` — subcommands, aliases, completion, persistent
+  hooks and a typed flag with a default.
 
 Run them from the repository root:
 
 ```v ignore
 v run examples/cli_app.v -- --help
+v run examples/style.v
+v run examples/headless.v
+v run examples/cli_complete.v -- serve -p 9000
+v run examples/cli_complete.v -- __complete se
 ```
 
 ## Design notes

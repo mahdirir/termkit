@@ -151,6 +151,8 @@ termkit/
 - [x] Hidden/deprecated flags and commands, required flags.
 - [x] Examples: `examples/counter.v`, `examples/cli_app.v`,
       `examples/widgets.v`, `examples/focus.v`.
+- [x] More examples: `tabs_tree.v`, `timer.v`, `style.v`, `headless.v`,
+      `cli_complete.v`; all nine compile, non-interactive ones run.
 - [x] Full `v fmt -l`, `v check-md`, `v -silent test .` pass locally.
 - [x] Every public symbol has a doc comment; `v doc -all termkit` succeeds.
 - [x] Golden completion fixture for the bash script.
