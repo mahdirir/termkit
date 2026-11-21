@@ -27,13 +27,15 @@ fn (mut t TextInput) insert(text string) {
 	if text == '' {
 		return
 	}
+	length := rune_len(t.value)
 	pos := t.position
-	if pos < 0 || pos > t.value.len {
-		t.position = t.value.len
+	if pos < 0 || pos > length {
+		t.position = length
 		return
 	}
-	t.value = t.value[..pos] + text + t.value[pos..]
-	t.position += text.len
+	prefix := rune_prefix(t.value, pos)
+	t.value = prefix + text + t.value[prefix.len..]
+	t.position += rune_len(text)
 }
 
 // is_focused reports whether this input accepts keyboard input.
@@ -60,6 +62,7 @@ pub fn (mut t TextInput) update(msg termkit.Msg) {
 			if msg.kind != .press {
 				return
 			}
+			length := rune_len(t.value)
 			match msg.key {
 				termkit.key_left {
 					if t.position > 0 {
@@ -67,7 +70,7 @@ pub fn (mut t TextInput) update(msg termkit.Msg) {
 					}
 				}
 				termkit.key_right {
-					if t.position < t.value.len {
+					if t.position < length {
 						t.position++
 					}
 				}
@@ -75,26 +78,30 @@ pub fn (mut t TextInput) update(msg termkit.Msg) {
 					t.position = 0
 				}
 				termkit.key_end {
-					t.position = t.value.len
+					t.position = length
 				}
 				termkit.key_backspace {
 					if t.position > 0 {
+						ch := rune_at(t.value, t.position - 1)
+						prefix := rune_prefix(t.value, t.position - 1)
+						t.value = prefix + t.value[prefix.len + ch.len..]
 						t.position--
-						t.value = t.value[..t.position] + t.value[t.position + 1..]
 					}
 				}
 				termkit.key_delete {
-					if t.position < t.value.len {
-						t.value = t.value[..t.position] + t.value[t.position + 1..]
+					if t.position < length {
+						ch := rune_at(t.value, t.position)
+						prefix := rune_prefix(t.value, t.position)
+						t.value = prefix + t.value[prefix.len + ch.len..]
 					}
 				}
 				else {
+					// A multi-byte key that is a single rune is printable text.
+					// Named keys such as f1 have one byte per rune and are ignored.
 					if msg.utf8 != '' {
 						t.insert(msg.utf8)
-					} else if msg.key.len == 1 && msg.key != ' ' {
+					} else if msg.key.len == 1 || rune_len(msg.key) < msg.key.len {
 						t.insert(msg.key)
-					} else if msg.key == ' ' {
-						t.insert(' ')
 					}
 				}
 			}
@@ -118,9 +125,12 @@ fn (t TextInput) display(s string) string {
 // view renders the prompt, value and a cursor marker. When mask is set, the
 // value is hidden behind the mask glyph.
 pub fn (t TextInput) view() string {
-	before := t.value[..t.position]
-	after := if t.position < t.value.len { t.value[t.position + 1..] } else { '' }
-	marker := if t.position < t.value.len { t.value[t.position..t.position + 1] } else { ' ' }
+	before := rune_prefix(t.value, t.position)
+	mut marker := rune_at(t.value, t.position)
+	after := if marker == '' { '' } else { t.value[before.len + marker.len..] }
+	if marker == '' {
+		marker = ' '
+	}
 	return t.prompt + t.display(before) + '\x1b[7m' + t.display(marker) + '\x1b[0m' +
 		t.display(after)
 }

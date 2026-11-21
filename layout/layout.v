@@ -97,42 +97,46 @@ fn max_or_zero(a int, b int) int {
 	return if a > b { a } else { b }
 }
 
-// hstack lays rectangles out left to right.
+// hstack lays rectangles out left to right. A rectangle's x may place a gap
+// after the previous rectangle; a smaller x is treated as zero gap.
 pub fn hstack(rects []Rect) Rect {
 	if rects.len == 0 {
 		return Rect{}
 	}
-	mut x := rects[0].x
+	mut end := rects[0].right()
 	mut height := 0
 	for r in rects {
 		height = max_or_zero(height, r.height)
 	}
-	for r in rects {
-		if r.x != x {
-			x += r.x - x
+	for r in rects[1..] {
+		mut gap := r.x - end
+		if gap < 0 {
+			gap = 0
 		}
-		x += r.width
+		end += gap + r.width
 	}
-	return Rect{ x: rects[0].x, y: rects[0].y, width: x - rects[0].x, height: height }
+	return Rect{ x: rects[0].x, y: rects[0].y, width: end - rects[0].x, height: height }
 }
 
-// vstack lays rectangles out top to bottom.
+// vstack lays rectangles out top to bottom. A rectangle's y may place a gap
+// after the previous rectangle; a smaller y is treated as zero gap.
 pub fn vstack(rects []Rect) Rect {
 	if rects.len == 0 {
 		return Rect{}
 	}
-	mut y := rects[0].y
+	mut end := rects[0].bottom()
 	mut width := 0
 	for r in rects {
 		width = max_or_zero(width, r.width)
 	}
-	for r in rects {
-		if r.y != y {
-			y += r.y - y
+	for r in rects[1..] {
+		mut gap := r.y - end
+		if gap < 0 {
+			gap = 0
 		}
-		y += r.height
+		end += gap + r.height
 	}
-	return Rect{ x: rects[0].x, y: rects[0].y, width: width, height: y - rects[0].y }
+	return Rect{ x: rects[0].x, y: rects[0].y, width: width, height: end - rects[0].y }
 }
 
 // place positions size inside outer using the given horizontal alignment and

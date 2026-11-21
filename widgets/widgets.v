@@ -36,6 +36,41 @@ fn truncate(s string, width int) string {
 	return out + '…'
 }
 
+// rune_len returns the number of runes in s.
+fn rune_len(s string) int {
+	mut n := 0
+	for _ in s.runes() {
+		n++
+	}
+	return n
+}
+
+// rune_prefix returns the first n runes of s as a string.
+fn rune_prefix(s string, n int) string {
+	mut out := ''
+	mut i := 0
+	for r in s.runes() {
+		if i >= n {
+			break
+		}
+		out += r.str()
+		i++
+	}
+	return out
+}
+
+// rune_at returns the nth rune of s as a string, or '' when out of range.
+fn rune_at(s string, n int) string {
+	mut i := 0
+	for r in s.runes() {
+		if i == n {
+			return r.str()
+		}
+		i++
+	}
+	return ''
+}
+
 fn pad(s string, width int) string {
 	w := term.printable_len(s)
 	if w >= width {

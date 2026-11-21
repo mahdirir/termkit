@@ -32,7 +32,7 @@ pub fn (t &TextArea) is_focused() bool {
 pub fn (mut t TextArea) set_text(text string) {
 	t.lines = if text == '' { [''] } else { text.split('\n') }
 	t.row = t.lines.len - 1
-	t.col = t.lines[t.row].len
+	t.col = rune_len(t.lines[t.row])
 }
 
 // text returns the joined content.
@@ -45,11 +45,22 @@ fn (mut t TextArea) insert(text string) {
 		t.lines = ['']
 	}
 	line := t.lines[t.row]
-	if t.col > line.len {
-		t.col = line.len
+	if t.col > rune_len(line) {
+		t.col = rune_len(line)
 	}
-	t.lines[t.row] = line[..t.col] + text + line[t.col..]
-	t.col += text.len
+	prefix := rune_prefix(line, t.col)
+	t.lines[t.row] = prefix + text + line[prefix.len..]
+	t.col += rune_len(text)
+}
+
+// newline splits the current line at the cursor and moves to the new line.
+fn (mut t TextArea) newline() {
+	line := t.lines[t.row]
+	prefix := rune_prefix(line, t.col)
+	t.lines[t.row] = prefix
+	t.lines.insert(t.row + 1, line[prefix.len..])
+	t.row++
+	t.col = 0
 }
 
 // update handles editing and navigation keys.
@@ -65,7 +76,10 @@ pub fn (mut t TextArea) update(msg termkit.Msg) {
 			t.focused = false
 		}
 		termkit.PasteMsg {
-			for part in msg.text.split('\n') {
+			for i, part in msg.text.split('\n') {
+				if i > 0 {
+					t.newline()
+				}
 				t.insert(part)
 			}
 		}
@@ -73,6 +87,7 @@ pub fn (mut t TextArea) update(msg termkit.Msg) {
 			if msg.kind != .press {
 				return
 			}
+			length := rune_len(t.lines[t.row])
 			match msg.key {
 				termkit.key_left {
 					if t.col > 0 {
@@ -80,51 +95,62 @@ pub fn (mut t TextArea) update(msg termkit.Msg) {
 					}
 				}
 				termkit.key_right {
-					if t.col < t.lines[t.row].len {
+					if t.col < length {
 						t.col++
 					}
 				}
 				termkit.key_up {
 					if t.row > 0 {
 						t.row--
-						if t.col > t.lines[t.row].len {
-							t.col = t.lines[t.row].len
+						if t.col > rune_len(t.lines[t.row]) {
+							t.col = rune_len(t.lines[t.row])
 						}
 					}
 				}
 				termkit.key_down {
 					if t.row < t.lines.len - 1 {
 						t.row++
-						if t.col > t.lines[t.row].len {
-							t.col = t.lines[t.row].len
+						if t.col > rune_len(t.lines[t.row]) {
+							t.col = rune_len(t.lines[t.row])
 						}
 					}
 				}
-				termkit.key_enter {
-					line := t.lines[t.row]
-					before := line[..t.col]
-					after := line[t.col..]
-					t.lines[t.row] = before
-					t.lines.insert(t.row + 1, after)
-					t.row++
+				termkit.key_home {
 					t.col = 0
+				}
+				termkit.key_end {
+					t.col = rune_len(t.lines[t.row])
+				}
+				termkit.key_enter {
+					t.newline()
 				}
 				termkit.key_backspace {
 					if t.col > 0 {
+						line := t.lines[t.row]
+						ch := rune_at(line, t.col - 1)
+						prefix := rune_prefix(line, t.col - 1)
+						t.lines[t.row] = prefix + line[prefix.len + ch.len..]
 						t.col--
-						t.lines[t.row] = t.lines[t.row][..t.col] + t.lines[t.row][t.col + 1..]
 					} else if t.row > 0 {
 						previous := t.lines[t.row - 1]
-						t.col = previous.len
+						t.col = rune_len(previous)
 						t.lines[t.row - 1] = previous + t.lines[t.row]
 						t.lines.delete(t.row)
 						t.row--
 					}
 				}
+				termkit.key_delete {
+					if t.col < length {
+						line := t.lines[t.row]
+						ch := rune_at(line, t.col)
+						prefix := rune_prefix(line, t.col)
+						t.lines[t.row] = prefix + line[prefix.len + ch.len..]
+					}
+				}
 				else {
 					if msg.utf8 != '' {
 						t.insert(msg.utf8)
-					} else if msg.key.len == 1 {
+					} else if msg.key.len == 1 || rune_len(msg.key) < msg.key.len {
 						t.insert(msg.key)
 					}
 				}

@@ -185,6 +185,29 @@ fn test_cursor_blink() {
 	assert cursor.view() == ' '
 }
 
+fn test_utf8_editing() {
+	mut input := TextInput{}
+	input.update(termkit.PasteMsg{ text: '世x' })
+	assert input.value == '世x'
+	assert input.position == 2
+	input.update(termkit.KeyMsg{ key: termkit.key_left })
+	assert input.position == 1
+	input.update(termkit.KeyMsg{ key: termkit.key_backspace })
+	assert input.value == 'x'
+	assert input.position == 0
+	input.update(termkit.KeyMsg{ key: 'é' })
+	assert input.value == 'éx'
+	assert input.view().contains('é')
+
+	mut area := TextArea{}
+	area.set_text('世x')
+	area.update(termkit.KeyMsg{ key: termkit.key_home })
+	area.update(termkit.KeyMsg{ key: termkit.key_delete })
+	assert area.text() == 'x'
+	area.update(termkit.PasteMsg{ text: 'α\nβ' })
+	assert area.text() == 'α\nβx'
+}
+
 fn test_tabs_navigation() {
 	mut tabs := Tabs{}
 	tabs.set_tabs(['one', 'two', 'three'])

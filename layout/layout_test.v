@@ -30,6 +30,13 @@ fn test_stacks() {
 	assert vstack([a, c]) == Rect{ x: 0, y: 0, width: 5, height: 3 }
 }
 
+fn test_stacks_with_default_positions() {
+	a := Rect{ width: 10, height: 2 }
+	b := Rect{ width: 10, height: 3 }
+	assert hstack([a, b]) == Rect{ width: 20, height: 3 }
+	assert vstack([a, b]) == Rect{ width: 10, height: 5 }
+}
+
 fn test_place() {
 	outer := Rect{ x: 0, y: 0, width: 10, height: 8 }
 	size := Size{ width: 4, height: 2 }

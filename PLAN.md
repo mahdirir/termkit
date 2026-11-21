@@ -109,6 +109,9 @@ termkit/
 - [x] Masked text input; list multi-select.
 - [x] Style color helpers: `Rgb`, `from_hex`, ANSI-256 parameters.
 - [x] Renderer downgrades truecolor to ANSI-256 and basic ANSI.
+- [x] Renderer keeps combining marks with their base glyph.
+- [x] Rune-aware cursors in text input/area; TextArea multi-line paste.
+- [x] `hstack`/`vstack` accumulate sizes for default-position rects.
 - [x] Tabs and collapsible Tree widgets.
 
 ### M5 — CLI core (complete)
