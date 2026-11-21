@@ -57,6 +57,14 @@ fn init_cb(user_data voidptr) {
 	}
 }
 
+// call_cleanup invokes the user's cleanup hook. It is called both when term.ui
+// handles a shutdown signal and on a normal quit from frame_cb.
+fn (mut p Program) call_cleanup() {
+	if f := p.opts.cleanup_fn {
+		f()
+	}
+}
+
 fn cleanup_cb(user_data voidptr) {
 	mut p := unsafe { &Program(user_data) }
 	if f := p.opts.cleanup_fn {
@@ -268,6 +276,17 @@ fn frame_cb(user_data voidptr) {
 		}
 	}
 	if p.quitting {
+		// term.ui only calls its cleanup callback on signals, so a normal quit
+		// would skip the program's cleanup hook and terminal restore.
+		p.call_cleanup()
+		if !isnil(p.ui) {
+			mut restore := '\x1b[0m\x1b[?25h'
+			if p.opts.alt_screen {
+				restore += '\x1b[?1049l'
+			}
+			p.ui.write(restore)
+			p.ui.flush()
+		}
 		exit(0)
 	}
 	if p.opts.without_renderer {

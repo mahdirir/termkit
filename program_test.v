@@ -1,3 +1,4 @@
+@[has_globals]
 module termkit
 
 import context
@@ -129,6 +130,24 @@ fn test_lifecycle_hooks_exist() {
 		f()
 	}
 	assert true
+}
+
+__global (
+	cleanup_called bool
+)
+
+fn mark_cleanup() {
+	cleanup_called = true
+}
+
+fn test_cleanup_hook_on_normal_quit() {
+	cleanup_called = false
+	mut p := new_program(&CounterModel{}, ProgramOpts{
+		without_renderer: true
+		cleanup_fn:       mark_cleanup
+	})
+	p.call_cleanup()
+	assert cleanup_called
 }
 
 fn test_program_resizes_renderer() {

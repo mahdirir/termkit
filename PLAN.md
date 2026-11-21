@@ -82,6 +82,7 @@ termkit/
       message types exist but are not produced yet.
 - [x] Mutex-protected queue; `Program.send` is safe from spawned threads,
       covered by a multi-worker stress test.
+- [x] `cleanup_fn` also fires on a normal `quit()`; terminal state is restored.
 - [x] Renderer resizes on `WindowSizeMsg`.
 - [x] Program-level `init_fn`/`cleanup_fn` and message filters.
 

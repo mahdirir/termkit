@@ -145,9 +145,11 @@ v run examples/cli_app.v -- --help
   command, and `out`/`err_out` capture generated output in tests.
 - **Thread-safe messages.** `Program.send` can be called from spawned threads;
   the queue is mutex-protected and an optional filter can drop messages.
-- **Lifecycle hooks.** `init_fn` and `cleanup_fn` run at the term.ui boundaries.
-  CLI commands also support `persistent_before`/`persistent_after` hooks that
-  run for every descendant in root-to-leaf order.
+- **Lifecycle hooks.** `init_fn` runs when term.ui starts. `cleanup_fn` runs on
+  both a normal `quit()` and a shutdown signal; on normal quit termkit also
+  emits the reset, cursor-show and alternate-screen-leave sequences. CLI
+  commands support `persistent_before`/`persistent_after` hooks that run for
+  every descendant in root-to-leaf order.
 - **File logging.** `log_to_file(path, message)` appends a line without
   disturbing the rendered frame.
 
