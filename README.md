@@ -132,6 +132,50 @@ v run examples/cli_complete.v -- serve -p 9000
 v run examples/cli_complete.v -- __complete se
 ```
 
+## C API
+
+termkit also ships as a C library. The exported ABI is small and uses only C
+types: opaque renderer handles, `const char *` strings and plain integers.
+
+```sh
+v run tools/build_c.v
+```
+
+This writes to `dist/c/`:
+
+| File | Purpose |
+| --- | --- |
+| `termkit.dll` / `.so` / `.dylib` | shared library |
+| `termkit.dll.a` (Windows) | import library linking against `termkit.dll` |
+| `termkit_static.lib` / `libtermkit.a` | static library (built with `-gc none`) |
+| `termkit.h` | C header |
+
+The shared library uses V's Boehm GC. The static library uses `-gc none` so it
+has no GC dependency; allocations live for the process lifetime, so prefer the
+shared library for long-running hosts.
+
+Example:
+
+```c
+#include "termkit.h"
+
+TKRenderer *r = tk_renderer_new(40, 1, TK_PROFILE_ANSI);
+tk_renderer_draw_text(r, 0, 0, "hello", "31", "", TK_ATTR_BOLD);
+puts(tk_renderer_frame(r));
+tk_renderer_free(r);
+```
+
+Returned strings are owned by the library and remain valid until the next call
+to the same function. Build and run the smoke test:
+
+```sh
+gcc capi/test/smoke.c -I dist/c dist/c/termkit.dll.a -o smoke.exe
+smoke.exe
+```
+
+On non-Windows platforms link with `-L dist/c -ltermkit` instead of the import
+library.
+
 ## Design notes
 
 - **Model / Message / Command.** State is owned by the model. Events arrive as

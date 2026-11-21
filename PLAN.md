@@ -153,6 +153,8 @@ termkit/
       `examples/widgets.v`, `examples/focus.v`.
 - [x] More examples: `tabs_tree.v`, `timer.v`, `style.v`, `headless.v`,
       `cli_complete.v`; all nine compile, non-interactive ones run.
+- [x] C API: exported `tk_*` ABI, generated header, shared + static builds,
+      `tools/build_c.v`, C smoke test passing for both library forms.
 - [x] Full `v fmt -l`, `v check-md`, `v -silent test .` pass locally.
 - [x] Every public symbol has a doc comment; `v doc -all termkit` succeeds.
 - [x] Golden completion fixture for the bash script.

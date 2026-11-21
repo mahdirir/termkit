@@ -8,6 +8,8 @@
 *.exp
 *.lib
 *.obj
+*.dll
+*.dylib
 *.tmp.c
 v_*.exe
 
@@ -15,3 +17,4 @@ v_*.exe
 .vtmp/
 build/
 .tmp/
+dist/
