@@ -173,6 +173,13 @@ pub fn (mut r Renderer) draw_text(x int, y int, text string, fg string, bg strin
 			esc = ''
 			continue
 		}
+		if ch == `\r` {
+			r.flush_cluster(cluster, cx, cy, state)
+			cx = x
+			cluster = ''
+			cluster_width = 0
+			continue
+		}
 		if ch == `\n` {
 			r.flush_cluster(cluster, cx, cy, state)
 			cx = x

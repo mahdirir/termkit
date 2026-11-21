@@ -120,6 +120,14 @@ fn test_combining_marks_stay_with_base() {
 	assert r.cells[2].text == 'x'
 }
 
+fn test_draw_text_carriage_return() {
+	mut r := new_renderer(4, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, 'ab\rc', '', '', 0)
+	assert r.cells[0].text == 'c'
+	assert !r.cells[0].text.contains('\r')
+}
+
 fn test_draw_text_newlines() {
 	mut r := new_renderer(5, 3, .ansi)
 	r.sync_updates = false
