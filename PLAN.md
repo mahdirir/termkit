@@ -169,7 +169,7 @@ termkit/
 | Risk | Mitigation |
 | --- | --- |
 | V closure contexts are pinned for process lifetime | `Cmd` is a sum type; `CmdFn` only for non-capturing functions |
-| `term.ui` has no bracketed paste or focus events | Approximate paste from batched `utf8` events; document focus as deferred |
+| `term.ui` has no bracketed paste, focus or repeat events | Approximate paste from batched `utf8` events; document focus/repeat fallbacks |
 | V backend quirks with interfaces and sum types | Spike each construct in M2 before building on it |
 | Large public API is hard to review later | Keep packages small, document every public symbol, examples per feature |
 | User asked for a vlang/v PR originally | VPM phase is explicit; PR mapping is recorded below and deferred |

@@ -181,6 +181,11 @@ program will not receive them from terminal input yet:
   program. For keyboard focus between widgets, use `FocusGroup` and the
   `Focusable` interface; Tab and Shift+Tab routing works today without any
   terminal support.
+- **Repeat.** `term.ui` reports held keys as a stream of `key_down` events with
+  no repeat flag, so the runtime delivers them as `KeyMsg` with kind `.press`.
+  `KeyEventKind.repeat` is available for messages an embedding driver supplies;
+  models that need to distinguish repeats should coalesce consecutive presses
+  of the same key themselves.
 
 True bracketed paste and focus tracking need small additions to `term.ui`'s
 input layer; `PLAN.md` records the intended changes.
