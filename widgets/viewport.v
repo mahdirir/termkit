@@ -9,6 +9,9 @@ pub mut:
 	offset int
 	height int = 10
 	width  int
+	// offset_x/offset_y locate the viewport on screen for mouse hit-testing.
+	offset_x int
+	offset_y int
 }
 
 // set_content replaces the content and keeps the offset in range.
@@ -74,6 +77,18 @@ pub fn (mut v Viewport) update(msg termkit.Msg) {
 			}
 			if msg.width > 0 {
 				v.width = msg.width
+			}
+			v.clamp()
+		}
+		termkit.MouseMsg {
+			if msg.action != .scroll || msg.y < v.offset_y || msg.y >= v.offset_y + v.height {
+				return
+			}
+			if msg.scroll == .up {
+				v.offset -= 1
+			}
+			if msg.scroll == .down {
+				v.offset += 1
 			}
 			v.clamp()
 		}

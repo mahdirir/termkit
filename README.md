@@ -31,7 +31,7 @@ v install metif12.termkit
 | --- | --- |
 | `termkit` | Program runtime, messages, commands, key handling, options |
 | `termkit.style` | Foreground/background, attributes, borders, padding, alignment |
-| `termkit.widgets` | Text input, viewport, list, table, spinner, progress, help |
+| `termkit.widgets` | Text input, viewport, list, table, file picker, focus groups, spinner, progress, timer, help |
 | `termkit.layout` | Rectangles, constraints, horizontal/vertical composition |
 | `termkit.cli` | Commands, flags, validation, flag groups, help/man, suggestions, completion |
 
@@ -138,6 +138,10 @@ v run examples/cli_app.v -- --help
   completion are pure functions over buffers and strings.
 - **Composable focus.** `Focusable` widgets are grouped with Tab / Shift+Tab
   routing, and the file picker plugs into the same group.
+- **Mouse-aware widgets.** Lists, viewports and the file picker handle scroll
+  and click messages using on-screen offsets.
+- **Context-aware hooks.** `execute_with_fn` and friends receive the parsed
+  command, and `out`/`err_out` capture generated output in tests.
 
 ## Relationship to existing V modules
 

@@ -99,6 +99,8 @@ termkit/
 - [x] Remaining widgets: textarea, table, paginator, cursor, file picker.
 - [x] `Focusable` interface and Tab/Shift+Tab `FocusGroup`.
 - [x] Style margins.
+- [x] Confirm, stopwatch and timer widgets.
+- [x] Mouse scroll/click handling in list, viewport and file picker.
 
 ### M5 — CLI core (mostly complete)
 
@@ -110,6 +112,8 @@ termkit/
 - [x] Suggestions via edit distance.
 - [x] Negatable bool flags, custom validators, mutually exclusive and
       required-together flag groups.
+- [x] `*_with_fn` hooks receiving the parsed command; injectable out/err
+      streams; read-only `get_flag`.
 - [x] Man page generation.
 - [ ] Injectable streams, context cancellation.
 

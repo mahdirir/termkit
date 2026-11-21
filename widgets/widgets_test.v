@@ -1,6 +1,7 @@
 module widgets
 
 import termkit
+import time
 
 fn test_textinput_editing() {
 	mut input := TextInput{ prompt: '> ' }
@@ -88,6 +89,39 @@ fn test_table_and_paginator() {
 	page.update(termkit.KeyMsg{ key: termkit.key_right })
 	assert page.start() == 10
 	assert page.view().contains('2/3')
+}
+
+fn test_mouse_scroll_widgets() {
+	mut list := List{ height: 2 }
+	list.set_items(['one', 'two', 'three'])
+	list.update(termkit.MouseMsg{ action: .scroll, scroll: .down })
+	assert list.selected_item() == 'two'
+	mut vp := Viewport{ height: 2 }
+	vp.set_content(['one', 'two', 'three'])
+	vp.update(termkit.MouseMsg{ action: .scroll, scroll: .down, y: 0 })
+	assert vp.view() == 'two\nthree'
+}
+
+fn test_confirm_widget() {
+	mut confirm := Confirm{}
+	confirm.update(termkit.KeyMsg{ key: 'y' })
+	assert confirm.answered
+	assert confirm.value
+	assert confirm.view().contains('[Y]')
+}
+
+fn test_timer_widgets() {
+	mut stopwatch := Stopwatch{}
+	stopwatch.start()
+	stopwatch.update(termkit.TickMsg{ id: 1, at: 1_000_000_000 })
+	stopwatch.update(termkit.TickMsg{ id: 1, at: 2_500_000_000 })
+	assert stopwatch.elapsed == 1_500_000_000
+	assert stopwatch.view() == '1.5s'
+	mut timer := new_timer(2 * time.second)
+	timer.start()
+	timer.update(termkit.TickMsg{ id: 1, at: 1_000_000_000 })
+	timer.update(termkit.TickMsg{ id: 1, at: 3_000_000_000 })
+	assert timer.done()
 }
 
 fn test_focus_group() {

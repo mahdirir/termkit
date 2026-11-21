@@ -10,6 +10,9 @@ pub mut:
 	filter   string
 	height   int = 10
 	width    int
+	// offset_x/offset_y locate the list on screen for mouse hit-testing.
+	offset_x int
+	offset_y int
 	focused  bool = true
 }
 
@@ -123,6 +126,58 @@ pub fn (mut l List) update(msg termkit.Msg) {
 				}
 			}
 		}
+		termkit.MouseMsg {
+			l.handle_mouse(msg)
+		}
+		else {}
+	}
+}
+
+fn (l List) visible_start() int {
+	vis := l.visible()
+	for i, idx in vis {
+		if idx == l.selected {
+			half := l.height / 2
+			return if i > half { i - half } else { 0 }
+		}
+	}
+	return 0
+}
+
+fn (mut l List) handle_mouse(msg termkit.MouseMsg) {
+	vis := l.visible()
+	if vis.len == 0 {
+		return
+	}
+	match msg.action {
+		.scroll {
+			mut pos := 0
+			for i, idx in vis {
+				if idx == l.selected {
+					pos = i
+					break
+				}
+			}
+			if msg.scroll == .up && pos > 0 {
+				l.selected = vis[pos - 1]
+			}
+			if msg.scroll == .down && pos < vis.len - 1 {
+				l.selected = vis[pos + 1]
+			}
+		}
+		.down {
+			if msg.button != .left {
+				return
+			}
+			row := msg.y - l.offset_y
+			if row < 0 {
+				return
+			}
+			idx := l.visible_start() + row
+			if idx < vis.len {
+				l.selected = vis[idx]
+			}
+		}
 		else {}
 	}
 }
@@ -131,13 +186,7 @@ pub fn (mut l List) update(msg termkit.Msg) {
 pub fn (l List) view() string {
 	vis := l.visible()
 	mut out := []string{}
-	mut start := 0
-	for i, idx in vis {
-		if idx == l.selected {
-			start = i - if i > l.height / 2 { l.height / 2 } else { i }
-			break
-		}
-	}
+	start := l.visible_start()
 	mut end := start + l.height
 	if end > vis.len {
 		end = vis.len

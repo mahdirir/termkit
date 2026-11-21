@@ -155,6 +155,9 @@ pub enum ArgsRule {
 // captured state or module state to communicate results.
 pub type Hook = fn () !
 
+// HookWithCommand is a callback that receives the parsed command.
+pub type HookWithCommand = fn (Command) !
+
 // Command is a node in a command tree.
 pub struct Command {
 pub mut:
@@ -179,12 +182,37 @@ pub mut:
 	execute_fn        Hook = unsafe { nil }
 	after             Hook = unsafe { nil }
 	init_fn           ?fn ()
+	// The *_with_fn hooks receive the parsed command, so callbacks can read
+	// flags without globals. They take precedence over the plain hooks.
+	before_with_fn  HookWithCommand = unsafe { nil }
+	execute_with_fn HookWithCommand = unsafe { nil }
+	after_with_fn   HookWithCommand = unsafe { nil }
+	// out and err_out capture generated output in tests. When absent, output
+	// goes to the process streams.
+	out     ?fn (string)
+	err_out ?fn (string)
 mut:
 	parent       &Command = unsafe { nil }
 	inherited    []Flag
 	all_flags    []Flag
 	show_help    bool
 	show_version bool
+}
+
+fn (c &Command) write_out(s string) {
+	if f := c.out {
+		f(s)
+		return
+	}
+	print(s)
+}
+
+fn (c &Command) write_err(s string) {
+	if f := c.err_out {
+		f(s)
+		return
+	}
+	eprint(s)
 }
 
 // add_command appends a sub-command.
@@ -354,11 +382,11 @@ fn (mut c Command) apply_short(ch u8, token string, args []string, pos int) !int
 
 fn (mut c Command) finish() ! {
 	if c.show_help {
-		print(c.help_message())
+		c.write_out(c.help_message())
 		return
 	}
 	if c.show_version {
-		println('${c.name} version ${c.version}')
+		c.write_out('${c.name} version ${c.version}\n')
 		return
 	}
 	for f in c.all_flags {
@@ -415,18 +443,26 @@ fn (mut c Command) finish() ! {
 		}
 		else {}
 	}
-	if !isnil(c.before) {
+	if !isnil(c.before_with_fn) {
+		c.before_with_fn(*c)!
+	} else if !isnil(c.before) {
 		c.before()!
 	}
-	if isnil(c.execute_fn) {
+	if isnil(c.execute_fn) && isnil(c.execute_with_fn) {
 		if c.commands.len == 0 {
 			return error('`${c.full_name()}` has no run callback')
 		}
-		print(c.help_message())
+		c.write_out(c.help_message())
 		return
 	}
-	c.execute_fn()!
-	if !isnil(c.after) {
+	if !isnil(c.execute_with_fn) {
+		c.execute_with_fn(*c)!
+	} else {
+		c.execute_fn()!
+	}
+	if !isnil(c.after_with_fn) {
+		c.after_with_fn(*c)!
+	} else if !isnil(c.after) {
 		c.after()!
 	}
 }
@@ -438,6 +474,17 @@ fn (c &Command) flag_found(name string) bool {
 		}
 	}
 	return false
+}
+
+// get_flag returns a copy of a flag in this command or its ancestors. It is
+// available to read-only callbacks such as HookWithCommand.
+pub fn (c &Command) get_flag(name string) !Flag {
+	for f in c.all_flags {
+		if f.name == name || f.abbrev == name {
+			return f
+		}
+	}
+	return error('flag `${name}` not found')
 }
 
 // flag returns a pointer to a flag in this command or its ancestors.

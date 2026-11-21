@@ -2,11 +2,17 @@
 module cli
 
 __global (
-	test_executed bool
+	test_executed   bool
+	test_flag_value string
+	test_output     string
 )
 
 fn mark_executed() ! {
 	test_executed = true
+}
+
+fn capture_output(s string) {
+	test_output += s
 }
 
 fn test_string_flag() ! {
@@ -166,6 +172,22 @@ fn test_required_together_flags() {
 		return
 	}
 	assert false
+}
+
+fn test_hook_receives_parsed_command() ! {
+	mut cmd := Command{ name: 'app', flags: [Flag{ name: 'name' }] }
+	cmd.execute_with_fn = fn (c Command) ! {
+		test_flag_value = c.get_flag('name')!.get_string() or { '' }
+	}
+	cmd.run(['app', '--name', 'v'])!
+	assert test_flag_value == 'v'
+}
+
+fn test_injectable_help_output() {
+	test_output = ''
+	mut cmd := Command{ name: 'app', description: 'demo', out: capture_output }
+	cmd.run(['app', '--help'])!
+	assert test_output.contains('demo')
 }
 
 fn test_manpage() {

@@ -15,7 +15,10 @@ pub mut:
 	width       int
 	show_hidden bool
 	selected    string
-	focused     bool = true
+	// offset_x/offset_y locate the picker on screen for mouse hit-testing.
+	offset_x int
+	offset_y int
+	focused  bool = true
 }
 
 // new_filepicker creates a picker for path, loading its entries.
@@ -113,19 +116,61 @@ pub fn (mut p FilePicker) update(msg termkit.Msg) {
 					p.reload() or { return }
 				}
 				termkit.key_enter {
-					if p.cursor < 0 || p.cursor >= p.entries.len {
-						return
-					}
-					entry := p.entries[p.cursor]
-					full := p.full_path(entry)
-					if os.is_dir(full) {
-						p.path = full
-						p.reload() or { return }
-					} else {
-						p.selected = full
-					}
+					p.activate() or { return }
 				}
 				else {}
+			}
+		}
+		termkit.MouseMsg {
+			p.handle_mouse(msg)
+		}
+		else {}
+	}
+}
+
+fn (mut p FilePicker) activate() ! {
+	if p.cursor < 0 || p.cursor >= p.entries.len {
+		return
+	}
+	entry := p.entries[p.cursor]
+	full := p.full_path(entry)
+	if os.is_dir(full) {
+		p.path = full
+		p.reload()!
+	} else {
+		p.selected = full
+	}
+}
+
+fn (p FilePicker) visible_start() int {
+	if p.height > 0 && p.cursor >= p.height {
+		return p.cursor - p.height + 1
+	}
+	return 0
+}
+
+fn (mut p FilePicker) handle_mouse(msg termkit.MouseMsg) {
+	match msg.action {
+		.scroll {
+			if msg.scroll == .up && p.cursor > 0 {
+				p.cursor--
+			}
+			if msg.scroll == .down && p.cursor < p.entries.len - 1 {
+				p.cursor++
+			}
+		}
+		.down {
+			if msg.button != .left {
+				return
+			}
+			row := msg.y - p.offset_y - 1
+			if row < 0 {
+				return
+			}
+			idx := p.visible_start() + row
+			if idx >= 0 && idx < p.entries.len {
+				p.cursor = idx
+				p.activate() or { return }
 			}
 		}
 		else {}
@@ -135,10 +180,7 @@ pub fn (mut p FilePicker) update(msg termkit.Msg) {
 // view renders a window of entries around the cursor.
 pub fn (p FilePicker) view() string {
 	mut out := [p.path]
-	mut start := 0
-	if p.height > 0 && p.cursor >= p.height {
-		start = p.cursor - p.height + 1
-	}
+	start := p.visible_start()
 	mut end := p.entries.len
 	if p.height > 0 && end > start + p.height {
 		end = start + p.height
