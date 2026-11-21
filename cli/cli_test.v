@@ -78,6 +78,17 @@ fn test_bool_and_short_cluster() ! {
 	assert test_executed
 }
 
+fn test_dashdash_stops_subcommand_dispatch() ! {
+	mut cmd := Command{
+		name:      'app'
+		args_rule: .at_least_one
+		commands:  [Command{ name: 'run', execute_fn: mark_executed }]
+	}
+	cmd.execute_fn = mark_executed
+	cmd.run(['app', '--', 'run'])!
+	assert cmd.args == ['run']
+}
+
 fn test_short_cluster_with_value() ! {
 	mut cmd := Command{
 		name:       'app'

@@ -137,6 +137,7 @@ termkit/
 - [x] Typed getters reject bad values; `get_ints`/`get_floats` added.
 - [x] Persistent parent hooks (before/after) for command trees.
 - [x] Short-flag clusters accept value flags (next arg or attached value).
+- [x] `--` also stops subcommand dispatch, not just flag parsing.
 - [x] Man page generation.
 - [x] Injectable streams, context cancellation.
 

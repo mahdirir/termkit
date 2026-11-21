@@ -350,7 +350,7 @@ fn (mut c Command) dispatch(mut args []string) ! {
 			}
 			continue
 		}
-		idx := c.find_sub(token)
+		idx := if end_flags { -1 } else { c.find_sub(token) }
 		if idx >= 0 {
 			mut sub := c.commands[idx]
 			sub.dispatch(mut args[i + 1..])!
