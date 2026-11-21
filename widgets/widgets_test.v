@@ -118,6 +118,18 @@ fn test_table_and_paginator() {
 	assert page.view().contains('2/3')
 }
 
+fn test_table_scrolls_to_selection() {
+	mut t := Table{ height: 2 }
+	t.set_data(['name'], [['a'], ['b'], ['c'], ['d'], ['e']])
+	for _ in 0 .. 4 {
+		t.update(termkit.KeyMsg{ key: termkit.key_down })
+	}
+	assert t.selected == 4
+	assert t.offset == 3
+	assert t.view().contains('> e')
+	assert !t.view().contains('> a')
+}
+
 fn test_mouse_scroll_widgets() {
 	mut list := List{ height: 2 }
 	list.set_items(['one', 'two', 'three'])

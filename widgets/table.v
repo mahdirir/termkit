@@ -9,7 +9,9 @@ pub mut:
 	rows     [][]string
 	widths   []int
 	selected int
-	height   int
+	// offset is the first visible row when height limits the view.
+	offset int
+	height int
 }
 
 fn (t &Table) measure() []int {
@@ -44,6 +46,7 @@ pub fn (mut t Table) set_data(headers []string, rows [][]string) {
 	t.rows = rows
 	t.widths = t.measure()
 	t.selected = 0
+	t.offset = 0
 }
 
 // update moves the selection.
@@ -66,8 +69,29 @@ pub fn (mut t Table) update(msg termkit.Msg) {
 				}
 				else {}
 			}
+			t.clamp_offset()
 		}
 		else {}
+	}
+}
+
+fn (mut t Table) clamp_offset() {
+	if t.height <= 0 {
+		t.offset = 0
+		return
+	}
+	if t.offset < 0 {
+		t.offset = 0
+	}
+	if t.selected < t.offset {
+		t.offset = t.selected
+	}
+	if t.selected >= t.offset + t.height {
+		t.offset = t.selected - t.height + 1
+	}
+	max_offset := t.rows.len - t.height
+	if max_offset >= 0 && t.offset > max_offset {
+		t.offset = max_offset
 	}
 }
 
@@ -87,10 +111,10 @@ fn render_row(cells []string, widths []int, marker string) string {
 pub fn (t Table) view() string {
 	mut out := [render_row(t.headers, t.widths, '  ')]
 	mut end := t.rows.len
-	if t.height > 0 && end > t.height {
-		end = t.height
+	if t.height > 0 && end > t.offset + t.height {
+		end = t.offset + t.height
 	}
-	for i in 0 .. end {
+	for i in t.offset .. end {
 		marker := if i == t.selected { '> ' } else { '  ' }
 		out << render_row(t.rows[i], t.widths, marker)
 	}
