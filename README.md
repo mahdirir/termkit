@@ -15,9 +15,10 @@ terminal apps need: there is no model/view/update runtime, no reusable widgets,
 no styling system, no diffing renderer, and no completions or suggestions for
 command line programs.
 
-`termkit` fills those gaps in one zero-dependency VPM module. It uses
-`term.ui` for platform input, adds the missing layers on top, and is structured
-so it can later be folded into the V standard library without a rewrite.
+`termkit` fills those gaps in one zero-dependency VPM module. It uses `term.ui`
+for platform input and adds the missing layers on top. It is and remains a
+standalone package published as `metif12.termkit`; it is not proposed for
+inclusion in the V standard library.
 
 ## Install
 
@@ -157,7 +158,7 @@ v run examples/cli_app.v -- --help
 
 - `term.ui` stays the input and raw-output layer. `termkit` consumes its public
   `Event`/`Context` API and does not fork it.
-- `vlib/cli` stays untouched in this phase. `termkit.cli` is a parallel,
+- `vlib/cli` is untouched. `termkit.cli` is a parallel,
   backwards-incompatible-by-design alternative with an error-returning API.
 - `vlib/flag` remains the lightweight declarative parser for simple tools.
 
@@ -189,14 +190,13 @@ program will not receive them from terminal input yet:
   models that need to distinguish repeats should coalesce consecutive presses
   of the same key themselves.
 
-True bracketed paste and focus tracking need small additions to `term.ui`'s
-input layer; `PLAN.md` records the intended changes.
+True bracketed paste and focus tracking would need additions to `term.ui`'s
+input layer. Those changes belong upstream; termkit does not patch stdlib.
 
 ## Deferred work
 
-Publishing to VPM and proposing the layers for inclusion in `vlang/v` are
-deliberate later steps. `PLAN.md` records the mapping from this module's
-packages to future stdlib locations.
+VPM registration is the only remaining outward step. termkit stays a standalone
+package; there is no plan to fold it into `vlib` or open a `vlang/v` PR.
 
 ## License
 

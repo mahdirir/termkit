@@ -75,9 +75,10 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - `v install metif12.termkit` works with a stock V toolchain.
    - No module-level globals that leak between programs.
 
-10. **Stdlib-ready shape.**
-   - Package boundaries match the eventual `term.ui` and `cli` extensions.
-   - `PLAN.md` records the exact file-to-stdlib mapping.
+10. **Standalone package shape.**
+   - Public packages stay importable as `termkit`, `termkit.style`,
+   `termkit.layout`, `termkit.widgets` and `termkit.cli`.
+   - Only public `term.ui` and `vlib` APIs are used; no stdlib patches.
    - No circular imports back into the module root from subpackages.
 
 11. **Documentation and examples.**
@@ -88,7 +89,8 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
 ## Non-goals
 
 - Copying code from Bubble Tea, Bubbles, Lip Gloss, Cobra or bobatea.
-- Changing the V compiler or the V standard library in this phase.
+- Changing the V compiler or the V standard library. termkit is not proposed
+   for `vlib` inclusion and no `vlang/v` PR is planned.
 - ncurses/PDCurses bindings, mouse hit-testing outside widgets, SSH servers,
   GPU rendering, or a full window manager for the terminal.
 - Bit-for-bit identical output to any Go library.
@@ -100,7 +102,8 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
   `tick`, `every`, `quit`, `msg_cmd`, `no_cmd`) to ease migration.
 - `view()` returns a string, following Bubble Tea, rather than drawing into a
   context. The difference is documented.
-- The package `termkit.cli` does not modify or shadow `vlib/cli`.
+- The package `termkit.cli` does not modify or shadow `vlib/cli`; both remain
+  available and independent.
 
 ## Definition of done for this phase
 
@@ -110,5 +113,6 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
 - [x] `v check-md` passes on every Markdown file.
 - [x] All examples compile with the master-based compiler; non-interactive
       examples can run in CI.
-- [ ] Module is pushed to `metif12/termkit`; VPM registration awaits explicit
-      approval of the name and description.
+- [x] Module is pushed to `metif12/termkit` as a standalone package.
+- [ ] VPM registration awaits explicit approval of the name and description.
+      No `vlib` fold-in or `vlang/v` PR is part of this phase.

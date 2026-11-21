@@ -2,15 +2,16 @@
 
 ## Status
 
-Phase 1 of 6: scaffolding. No runtime code exists yet.
+All six milestones are complete. termkit is a standalone VPM package; VPM
+registration is the only remaining outward step.
 
 ## Decisions
 
 | Decision | Choice |
 | --- | --- |
-| Deliverable now | VPM module `metif12.termkit`, no `vlang/v` PR yet |
-| Scope | Both TUI and CLI layers in one module, one future stdlib PR |
-| Placement | Standalone VPM repo, shaped for later stdlib inclusion |
+| Deliverable | Standalone VPM module `metif12.termkit` |
+| Scope | Both TUI and CLI layers in one module |
+| Placement | Standalone VPM repo; no `vlib` fold-in and no `vlang/v` PR |
 | bobatea | Independent implementation, compatible names, no copied code |
 
 ## Environment
@@ -175,18 +176,11 @@ termkit/
 | `term.ui` has no bracketed paste, focus or repeat events | Approximate paste from batched `utf8` events; document focus/repeat fallbacks |
 | V backend quirks with interfaces and sum types | Spike each construct in M2 before building on it |
 | Large public API is hard to review later | Keep packages small, document every public symbol, examples per feature |
-| User asked for a vlang/v PR originally | VPM phase is explicit; PR mapping is recorded below and deferred |
+| termkit stays standalone, outside `vlib` | Use only public `term.ui`/`vlib` APIs; no compiler or stdlib patches |
 
-## Deferred vlang/v PR mapping
+## Scope boundary
 
-| Module package | Future stdlib location |
-| --- | --- |
-| `termkit` runtime, messages, commands | `vlib/term/ui/` (new files) |
-| `termkit.style`, `termkit.layout`, `termkit.widgets` | `vlib/term/ui/widgets/` |
-| `termkit.cli` | new files in `vlib/cli/` |
-| renderer diffing | `vlib/term/ui/ui.c.v` (resolves existing TODO) |
-| paste/focus input support | `vlib/term/ui/input_*.c.v`, `termios_nix.c.v` |
-| examples | `examples/term.ui/`, `examples/cli*.v` |
-
-The PR should be one logical change with focused commits, opened from
-`metif12/v` against `vlang/v`; no branch is ever created on `vlang/v` itself.
+termkit is and remains a standalone VPM package. There is no plan to fold it
+into `vlib`, to patch `term.ui`/`vlib/cli`, or to open a `vlang/v` PR. Input
+features the stdlib does not expose (bracketed paste, focus, repeat) are
+handled through documented fallbacks in the module.
