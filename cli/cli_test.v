@@ -190,6 +190,20 @@ fn test_injectable_help_output() {
 	assert test_output.contains('demo')
 }
 
+fn test_deprecated_flag_warning() ! {
+	test_output = ''
+	mut cmd := Command{
+		name:       'app'
+		out:        capture_output
+		err_out:    capture_output
+		execute_fn: mark_executed
+		flags:      [Flag{ name: 'old', flag: .bool, deprecated: 'use --new' }]
+	}
+	cmd.run(['app', '--old'])!
+	assert test_output.contains('deprecated')
+	assert test_output.contains('use --new')
+}
+
 fn test_manpage() {
 	mut cmd := Command{ name: 'app', description: 'demo' }
 	cmd.flags << Flag{ name: 'name', description: 'a name' }

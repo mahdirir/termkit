@@ -84,6 +84,15 @@ fn test_program_skips_noop() {
 	assert p.view() == 'n=0:'
 }
 
+fn test_threaded_send() {
+	mut p := new_test_program()
+	ptr := &p
+	go ptr.send(KeyMsg{ key: 'i' })
+	time.sleep(20 * time.millisecond)
+	p.process_queue()
+	assert p.view() == 'n=1:i'
+}
+
 fn test_context_cancellation() {
 	mut parent := context.background()
 	mut ctx, cancel := context.with_cancel(mut parent)

@@ -20,6 +20,16 @@ fn test_textinput_editing() {
 	assert input.view().contains('hi there')
 }
 
+fn test_textinput_mask() {
+	mut input := TextInput{ mask: `*`, prompt: 'pw: ' }
+	input.update(termkit.KeyMsg{ key: 's' })
+	input.update(termkit.KeyMsg{ key: 'e' })
+	input.update(termkit.KeyMsg{ key: 'c' })
+	assert input.value == 'sec'
+	assert input.view().contains('***')
+	assert !input.view().contains('sec')
+}
+
 fn test_textinput_blur() {
 	mut input := TextInput{}
 	input.blur()

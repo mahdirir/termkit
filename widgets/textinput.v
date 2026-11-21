@@ -8,7 +8,9 @@ pub mut:
 	prompt   string = '> '
 	value    string
 	position int
-	focused  bool = true
+	// mask, when non-zero, replaces each character in the rendered value.
+	mask    u8
+	focused bool = true
 }
 
 // focus marks the input as accepting keys.
@@ -101,10 +103,24 @@ pub fn (mut t TextInput) update(msg termkit.Msg) {
 	}
 }
 
-// view renders the prompt, value and a cursor marker.
+fn (t TextInput) display(s string) string {
+	if t.mask == 0 {
+		return s
+	}
+	glyph := u8(t.mask).ascii_str()
+	mut out := ''
+	for _ in s.runes() {
+		out += glyph
+	}
+	return out
+}
+
+// view renders the prompt, value and a cursor marker. When mask is set, the
+// value is hidden behind the mask glyph.
 pub fn (t TextInput) view() string {
 	before := t.value[..t.position]
 	after := if t.position < t.value.len { t.value[t.position + 1..] } else { '' }
 	marker := if t.position < t.value.len { t.value[t.position..t.position + 1] } else { ' ' }
-	return t.prompt + before + '\x1b[7m' + marker + '\x1b[0m' + after
+	return t.prompt + t.display(before) + '\x1b[7m' + t.display(marker) + '\x1b[0m' +
+		t.display(after)
 }

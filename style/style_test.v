@@ -26,6 +26,19 @@ fn test_render_border() {
 	assert out.ends_with('┘\x1b[0m')
 }
 
+fn test_color_helpers() {
+	c := from_hex('#1a2b3c') or {
+		assert false
+		return
+	}
+	assert c.r == 26 && c.g == 43 && c.b == 60
+	assert c.fg() == '38;2;26;43;60'
+	assert c.bg() == '48;2;26;43;60'
+	assert from_hex('bad') == none
+	assert ansi256_fg(42) == '38;5;42'
+	assert ansi256_bg(42) == '48;5;42'
+}
+
 fn test_render_margin() {
 	s := Style{ border: .single, margin: 1, width: 12 }
 	out := s.render('hi')

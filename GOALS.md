@@ -30,7 +30,7 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
      that, a documented fallback path.
 
 4. **A useful component set.**
-   - Single-line text input and multi-line text area.
+   - Single-line text input with optional mask and multi-line text area.
    - Scrollable viewport, list with filtering, table, file picker.
    - Spinner, progress bar, paginator, confirm prompt, stopwatch/timer,
      help/keybinding display, cursor.
@@ -39,8 +39,8 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - Every component is independently testable and composable.
 
 5. **Styling and layout.**
-   - Foreground, background, bold/italic/underline/reverse, borders, padding,
-     margins, alignment, fixed and percentage sizes.
+   - Foreground, background, RGB/hex/ANSI-256 colors, bold/italic/underline/
+     reverse, borders, padding, margins, alignment, fixed sizes.
    - Horizontal and vertical composition with minimum sizes and truncation.
    - Correct width handling for CJK, combining marks and ANSI sequences.
 
@@ -53,7 +53,7 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - Shell completion generation and a dynamic `__complete` protocol.
    - Error returns instead of `exit()` inside the parser; injectable streams.
    - Hooks that receive the parsed command so flags are readable without
-     globals.
+     globals; deprecation warnings for old flags and commands.
 
 7. **Cobra-class flag semantics.**
    - Negatable bool flags (`--no-color`), custom value validators, mutually

@@ -78,6 +78,7 @@ termkit/
       `context.Context` cancellation.
 - [ ] Real bracketed paste and focus/blur require stdlib input changes; the
       message types exist but are not produced yet.
+- [x] Mutex-protected queue; `Program.send` is safe from spawned threads.
 
 ### M3 — Renderer (complete)
 
@@ -101,6 +102,8 @@ termkit/
 - [x] Style margins.
 - [x] Confirm, stopwatch and timer widgets.
 - [x] Mouse scroll/click handling in list, viewport and file picker.
+- [x] Masked text input.
+- [x] Style color helpers: `Rgb`, `from_hex`, ANSI-256 parameters.
 
 ### M5 — CLI core (mostly complete)
 
@@ -113,7 +116,7 @@ termkit/
 - [x] Negatable bool flags, custom validators, mutually exclusive and
       required-together flag groups.
 - [x] `*_with_fn` hooks receiving the parsed command; injectable out/err
-      streams; read-only `get_flag`.
+      streams; read-only `get_flag`; deprecated-flag warnings.
 - [x] Man page generation.
 - [ ] Injectable streams, context cancellation.
 

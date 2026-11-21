@@ -323,6 +323,9 @@ fn (mut c Command) parse_long(token string, args []string, pos int) !int {
 		next := if pos + 1 < args.len { args[pos + 1] } else { '' }
 		consumed := f.set_value(token, next)!
 		f.found = true
+		if f.deprecated != '' {
+			c.write_err('flag `${f.name}` is deprecated: ${f.deprecated}\n')
+		}
 		if f.name == 'help' && f.value[0] == 'true' {
 			c.show_help = true
 		}
@@ -374,6 +377,9 @@ fn (mut c Command) apply_short(ch u8, token string, args []string, pos int) !int
 	next := if pos + 1 < args.len { args[pos + 1] } else { '' }
 	consumed := f.set_value(name, next)!
 	f.found = true
+	if f.deprecated != '' {
+		c.write_err('flag `${f.name}` is deprecated: ${f.deprecated}\n')
+	}
 	if f.name == 'help' && f.value[0] == 'true' {
 		c.show_help = true
 	}

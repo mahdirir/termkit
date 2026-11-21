@@ -1,6 +1,7 @@
 module termkit
 
 import context
+import sync
 import term.ui as tui
 import time
 
@@ -30,32 +31,62 @@ pub:
 pub mut:
 	model Model
 mut:
-	ui        &tui.Context = unsafe { nil }
-	queue     []Msg
-	scheduled []Scheduled
-	renderer  ?Renderer
-	next_id   int
-	quitting  bool
+	ui          &tui.Context = unsafe { nil }
+	queue_mutex &sync.Mutex  = unsafe { nil }
+	queue       []Msg
+	scheduled   []Scheduled
+	renderer    ?Renderer
+	next_id     int
+	quitting    bool
 }
 
 // new_program creates a Program for model.
 pub fn new_program(model Model, opts ProgramOpts) Program {
 	return Program{
-		model: model
-		opts:  opts
+		model:       model
+		opts:        opts
+		queue_mutex: sync.new_mutex()
 	}
 }
 
-// send queues a message for the model.
+// send queues a message for the model. It is safe to call from other threads.
 pub fn (mut p Program) send(msg Msg) {
+	if isnil(p.queue_mutex) {
+		p.queue << msg
+		return
+	}
+	mut mutex := p.queue_mutex
+	mutex.lock()
 	p.queue << msg
+	mutex.unlock()
+}
+
+// take_msg removes and returns the next queued message.
+fn (mut p Program) take_msg() ?Msg {
+	if isnil(p.queue_mutex) {
+		if p.queue.len == 0 {
+			return none
+		}
+		msg := p.queue[0]
+		p.queue = p.queue[1..]
+		return msg
+	}
+	mut mutex := p.queue_mutex
+	mutex.lock()
+	if p.queue.len == 0 {
+		mutex.unlock()
+		return none
+	}
+	msg := p.queue[0]
+	p.queue = p.queue[1..]
+	mutex.unlock()
+	return msg
 }
 
 // process_queue delivers all queued messages, stopping on QuitMsg.
 pub fn (mut p Program) process_queue() {
-	for p.queue.len > 0 && !p.quitting {
-		msg := p.queue[0]
-		p.queue = p.queue[1..]
+	for !p.quitting {
+		msg := p.take_msg() or { break }
 		p.handle(msg)
 	}
 }

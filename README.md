@@ -30,7 +30,7 @@ v install metif12.termkit
 | Import | Purpose |
 | --- | --- |
 | `termkit` | Program runtime, messages, commands, key handling, options |
-| `termkit.style` | Foreground/background, attributes, borders, padding, alignment |
+| `termkit.style` | Foreground/background, RGB/hex/ANSI-256 colors, attributes, borders, padding, margins, alignment |
 | `termkit.widgets` | Text input, viewport, list, table, file picker, focus groups, spinner, progress, timer, help |
 | `termkit.layout` | Rectangles, constraints, horizontal/vertical composition |
 | `termkit.cli` | Commands, flags, validation, flag groups, help/man, suggestions, completion |
@@ -142,6 +142,8 @@ v run examples/cli_app.v -- --help
   and click messages using on-screen offsets.
 - **Context-aware hooks.** `execute_with_fn` and friends receive the parsed
   command, and `out`/`err_out` capture generated output in tests.
+- **Thread-safe messages.** `Program.send` can be called from spawned threads;
+  the queue is mutex-protected.
 
 ## Relationship to existing V modules
 
