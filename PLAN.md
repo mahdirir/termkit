@@ -80,7 +80,8 @@ termkit/
       `context.Context` cancellation.
 - [ ] Real bracketed paste and focus/blur require stdlib input changes; the
       message types exist but are not produced yet.
-- [x] Mutex-protected queue; `Program.send` is safe from spawned threads.
+- [x] Mutex-protected queue; `Program.send` is safe from spawned threads,
+      covered by a multi-worker stress test.
 - [x] Renderer resizes on `WindowSizeMsg`.
 - [x] Program-level `init_fn`/`cleanup_fn` and message filters.
 

@@ -154,6 +154,26 @@ fn test_threaded_send() {
 	assert p.view() == 'n=1:i'
 }
 
+fn send_many(p &Program, count int) {
+	for _ in 0 .. count {
+		p.send(KeyMsg{ key: 'i' })
+	}
+}
+
+fn test_threaded_send_stress() {
+	mut p := new_test_program()
+	ptr := &p
+	mut workers := []thread{}
+	for _ in 0 .. 4 {
+		workers << go send_many(ptr, 25)
+	}
+	for worker in workers {
+		worker.wait()
+	}
+	p.process_queue()
+	assert p.view().starts_with('n=100:')
+}
+
 fn test_context_cancellation() {
 	mut parent := context.background()
 	mut ctx, cancel := context.with_cancel(mut parent)
