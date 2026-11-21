@@ -80,6 +80,7 @@ termkit/
       message types exist but are not produced yet.
 - [x] Mutex-protected queue; `Program.send` is safe from spawned threads.
 - [x] Renderer resizes on `WindowSizeMsg`.
+- [x] Program-level `init_fn`/`cleanup_fn` and message filters.
 
 ### M3 — Renderer (complete)
 
@@ -103,7 +104,7 @@ termkit/
 - [x] Style margins.
 - [x] Confirm, stopwatch and timer widgets.
 - [x] Mouse scroll/click handling in list, viewport and file picker.
-- [x] Masked text input.
+- [x] Masked text input; list multi-select.
 - [x] Style color helpers: `Rgb`, `from_hex`, ANSI-256 parameters.
 
 ### M5 — CLI core (mostly complete)
@@ -119,6 +120,7 @@ termkit/
 - [x] `*_with_fn` hooks receiving the parsed command; injectable out/err
       streams; read-only `get_flag`; deprecated-flag warnings.
 - [x] Unknown-command suggestions and tree-aware `__complete` traversal.
+- [x] `silence_usage` and `silence_errors` options.
 - [x] Man page generation.
 - [ ] Injectable streams, context cancellation.
 

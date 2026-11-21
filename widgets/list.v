@@ -13,7 +13,10 @@ pub mut:
 	// offset_x/offset_y locate the list on screen for mouse hit-testing.
 	offset_x int
 	offset_y int
-	focused  bool = true
+	// multi_select allows several items to be marked with the space key.
+	multi_select bool
+	marked       []bool
+	focused      bool = true
 }
 
 // set_items replaces the items and resets selection and filter.
@@ -21,7 +24,27 @@ pub fn (mut l List) set_items(items []string) {
 	l.items = items
 	l.selected = 0
 	l.filter = ''
+	l.marked = []bool{len: items.len}
 	l.clamp()
+}
+
+// toggle marks or unmarks the selected item when multi_select is enabled.
+pub fn (mut l List) toggle() {
+	if !l.multi_select || l.selected < 0 || l.selected >= l.marked.len {
+		return
+	}
+	l.marked[l.selected] = !l.marked[l.selected]
+}
+
+// selected_items returns the values of all marked items in declaration order.
+pub fn (l List) selected_items() []string {
+	mut out := []string{}
+	for i, marked in l.marked {
+		if marked && i < l.items.len {
+			out << l.items[i]
+		}
+	}
+	return out
 }
 
 fn (l List) visible() []int {
@@ -115,6 +138,14 @@ pub fn (mut l List) update(msg termkit.Msg) {
 						l.clamp()
 					}
 				}
+				termkit.key_space {
+					if l.multi_select {
+						l.toggle()
+					} else {
+						l.filter += ' '
+						l.clamp()
+					}
+				}
 				else {
 					if msg.utf8.len > 0 {
 						l.filter += msg.utf8
@@ -193,7 +224,10 @@ pub fn (l List) view() string {
 	}
 	for i in start .. end {
 		idx := vis[i]
-		marker := if idx == l.selected { '> ' } else { '  ' }
+		mut marker := if idx == l.selected { '> ' } else { '  ' }
+		if idx < l.marked.len && l.marked[idx] {
+			marker = '* '
+		}
 		mut line := l.items[idx]
 		if l.width > 0 {
 			line = pad(truncate(line, l.width - 2), l.width - 2)

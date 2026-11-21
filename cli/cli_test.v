@@ -190,6 +190,18 @@ fn test_injectable_help_output() {
 	assert test_output.contains('demo')
 }
 
+fn test_silence_usage() {
+	test_output = ''
+	mut cmd := Command{
+		name:          'app'
+		out:           capture_output
+		silence_usage: true
+	}
+	cmd.add_command(Command{ name: 'sub' })
+	cmd.run(['app'])!
+	assert test_output == ''
+}
+
 fn test_unknown_command_suggestion() {
 	mut root := Command{ name: 'app' }
 	root.add_command(Command{ name: 'greet', aliases: ['g'] })

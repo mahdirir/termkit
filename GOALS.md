@@ -12,7 +12,8 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - `Model` with `init`, `update`, `view`.
    - Messages for keys, mouse, resize, focus, paste, ticks and errors.
    - Commands as values: `no_cmd`, `msg_cmd`, `batch`, `sequence`, `tick`,
-     `every`, `quit`, `set_window_title`, `print`.
+     `every`, `quit`, `set_window_title`, `write_line`.
+   - Lifecycle hooks, message filters, thread-safe message delivery.
    - Identical update semantics with and without a real terminal, so tests can
      drive a program by injecting messages.
 
@@ -31,7 +32,8 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
 
 4. **A useful component set.**
    - Single-line text input with optional mask and multi-line text area.
-   - Scrollable viewport, list with filtering, table, file picker.
+   - Scrollable viewport, list with filtering and multi-select, table, file
+     picker.
    - Spinner, progress bar, paginator, confirm prompt, stopwatch/timer,
      help/keybinding display, cursor.
    - Tab/Shift+Tab focus groups over any `Focusable` widget.
@@ -53,7 +55,8 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
      for both flags and sub-commands.
    - Shell completion generation and a dynamic `__complete` protocol that
      walks nested command trees.
-   - Error returns instead of `exit()` inside the parser; injectable streams.
+   - Error returns instead of `exit()` inside the parser; injectable streams;
+     `silence_usage` and `silence_errors` for embedding.
    - Hooks that receive the parsed command so flags are readable without
      globals; deprecation warnings for old flags and commands.
 

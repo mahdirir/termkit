@@ -59,6 +59,16 @@ fn test_list_navigation() {
 	assert list.view().contains('> beta')
 }
 
+fn test_list_multi_select() {
+	mut list := List{ multi_select: true }
+	list.set_items(['alpha', 'beta', 'gamma'])
+	list.toggle()
+	list.update(termkit.KeyMsg{ key: termkit.key_down })
+	list.toggle()
+	assert list.selected_items() == ['alpha', 'beta']
+	assert list.view().contains('* ')
+}
+
 fn test_list_filter() {
 	mut list := List{ height: 5 }
 	list.set_items(['alpha', 'beta', 'gamma'])

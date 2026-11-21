@@ -28,4 +28,10 @@ pub:
 	cancel ?fn () bool
 	// ctx stops the program when it is cancelled.
 	ctx ?context.Context
+	// init_fn runs once after term.ui is initialised.
+	init_fn ?fn ()
+	// cleanup_fn runs once before the program restores the terminal.
+	cleanup_fn ?fn ()
+	// filter can drop or transform a message before it reaches the model.
+	filter ?fn (Msg) ?Msg
 }

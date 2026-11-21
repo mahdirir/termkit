@@ -49,15 +49,33 @@ pub fn new_program(model Model, opts ProgramOpts) Program {
 	}
 }
 
+fn init_cb(user_data voidptr) {
+	mut p := unsafe { &Program(user_data) }
+	if f := p.opts.init_fn {
+		f()
+	}
+}
+
+fn cleanup_cb(user_data voidptr) {
+	mut p := unsafe { &Program(user_data) }
+	if f := p.opts.cleanup_fn {
+		f()
+	}
+}
+
 // send queues a message for the model. It is safe to call from other threads.
 pub fn (mut p Program) send(msg Msg) {
+	mut delivered := msg
+	if f := p.opts.filter {
+		delivered = f(msg) or { return }
+	}
 	if isnil(p.queue_mutex) {
-		p.queue << msg
+		p.queue << delivered
 		return
 	}
 	mut mutex := p.queue_mutex
 	mutex.lock()
-	p.queue << msg
+	p.queue << delivered
 	mutex.unlock()
 }
 
@@ -100,6 +118,8 @@ pub fn (mut p Program) view() string {
 pub fn (mut p Program) run() ! {
 	mut ctx := tui.init(tui.Config{
 		user_data:            p
+		init_fn:              init_cb
+		cleanup_fn:           cleanup_cb
 		frame_fn:             frame_cb
 		event_fn:             event_cb
 		frame_rate:           if p.opts.fps > 0 { p.opts.fps } else { 60 }

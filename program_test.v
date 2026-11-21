@@ -84,6 +84,42 @@ fn test_program_skips_noop() {
 	assert p.view() == 'n=0:'
 }
 
+fn drop_noop(msg termkit.Msg) ?termkit.Msg {
+	match msg {
+		termkit.NoopMsg {
+			return none
+		}
+		else {
+			return msg
+		}
+	}
+}
+
+fn test_message_filter() {
+	mut model := &CounterModel{}
+	mut p := new_program(model, ProgramOpts{ without_renderer: true, filter: drop_noop })
+	p.send(termkit.NoopMsg{})
+	p.process_queue()
+	assert p.view() == 'n=0:'
+	p.send(termkit.KeyMsg{ key: 'i' })
+	p.process_queue()
+	assert p.view() == 'n=1:i'
+}
+
+fn test_lifecycle_hooks_exist() {
+	opts := ProgramOpts{
+		init_fn:    fn () {}
+		cleanup_fn: fn () {}
+	}
+	if f := opts.init_fn {
+		f()
+	}
+	if f := opts.cleanup_fn {
+		f()
+	}
+	assert true
+}
+
 fn test_program_resizes_renderer() {
 	mut p := new_test_program()
 	r := new_renderer(4, 1, .ansi)

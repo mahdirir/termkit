@@ -174,6 +174,10 @@ pub mut:
 	args_rule   ArgsRule
 	hidden      bool
 	deprecated  string
+	// silence_usage suppresses generated help when a command has no callback.
+	silence_usage bool
+	// silence_errors suppresses error text; errors are still returned.
+	silence_errors bool
 	// mutually_exclusive lists groups of flag names that cannot be combined.
 	mutually_exclusive [][]string
 	// required_together lists groups where supplying one requires all.
@@ -328,7 +332,7 @@ fn (mut c Command) parse_long(token string, args []string, pos int) !int {
 		next := if pos + 1 < args.len { args[pos + 1] } else { '' }
 		consumed := f.set_value(token, next)!
 		f.found = true
-		if f.deprecated != '' {
+		if f.deprecated != '' && !c.silence_errors {
 			c.write_err('flag `${f.name}` is deprecated: ${f.deprecated}\n')
 		}
 		if f.name == 'help' && f.value[0] == 'true' {
@@ -463,7 +467,9 @@ fn (mut c Command) finish() ! {
 		if c.commands.len == 0 {
 			return error('`${c.full_name()}` has no run callback')
 		}
-		c.write_out(c.help_message())
+		if !c.silence_usage {
+			c.write_out(c.help_message())
+		}
 		return
 	}
 	if !isnil(c.execute_with_fn) {
