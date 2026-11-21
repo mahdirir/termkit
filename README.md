@@ -166,12 +166,30 @@ The API is inspired by Bubble Tea, Bubbles, Lip Gloss and Cobra, and by
 closures. No code from those projects is used; this is an independent
 implementation under the MIT license.
 
+## Input limitations and fallbacks
+
+`term.ui` does not currently surface bracketed-paste or terminal focus events.
+The `PasteMsg`, `FocusMsg` and `BlurMsg` types are part of the public API, but a
+program will not receive them from terminal input yet:
+
+- **Paste.** For a large paste, `term.ui` reports the text as a burst of
+  ordinary key events. A model that needs paste semantics should accumulate
+  consecutive printable `KeyMsg`s (or `utf8` fields) and produce its own
+  `PasteMsg`. The text input and text area widgets accept `PasteMsg` when a
+  driver supplies one.
+- **Focus.** `FocusMsg`/`BlurMsg` can be sent explicitly by an embedding
+  program. For keyboard focus between widgets, use `FocusGroup` and the
+  `Focusable` interface; Tab and Shift+Tab routing works today without any
+  terminal support.
+
+True bracketed paste and focus tracking need small additions to `term.ui`'s
+input layer; `PLAN.md` records the intended changes.
+
 ## Deferred work
 
 Publishing to VPM and proposing the layers for inclusion in `vlang/v` are
 deliberate later steps. `PLAN.md` records the mapping from this module's
-packages to future stdlib locations, including the small `term.ui` input
-changes needed for true bracketed paste and focus events.
+packages to future stdlib locations.
 
 ## License
 
