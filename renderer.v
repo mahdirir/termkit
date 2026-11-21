@@ -130,15 +130,21 @@ pub fn (mut r Renderer) set_cell(x int, y int, text string, fg string, bg string
 
 // draw_text writes text starting at x,y. SGR color and attribute sequences in
 // the text are parsed into cell styles; other escape sequences are ignored.
+// Combining marks and joiners are kept with their base glyph in a single cell.
 pub fn (mut r Renderer) draw_text(x int, y int, text string, fg string, bg string, attrs u8) {
 	mut cx := x
 	mut cy := y
 	mut state := SgrState{ fg: fg, bg: bg, attrs: attrs }
 	mut cluster := ''
+	mut cluster_width := 0
 	mut in_sgr := false
 	mut sgr := ''
 	for ch in text.runes() {
 		if ch == 27 {
+			r.flush_cluster(cluster, cx, cy, state)
+			cx += cluster_width
+			cluster = ''
+			cluster_width = 0
 			in_sgr = true
 			sgr = ''
 			continue
@@ -153,38 +159,42 @@ pub fn (mut r Renderer) draw_text(x int, y int, text string, fg string, bg strin
 			continue
 		}
 		if ch == `\n` {
-			if cluster != '' {
-				r.set_cell(cx, cy, cluster, state.fg, state.bg, state.attrs)
-				cluster = ''
-			}
+			r.flush_cluster(cluster, cx, cy, state)
 			cx = x
 			cy++
+			cluster = ''
+			cluster_width = 0
 			continue
 		}
 		if ch == `\t` {
-			if cluster != '' {
-				r.set_cell(cx, cy, cluster, state.fg, state.bg, state.attrs)
-				cluster = ''
-			}
+			r.flush_cluster(cluster, cx, cy, state)
+			cx += cluster_width
+			cluster = ''
+			cluster_width = 0
 			r.set_cell(cx, cy, '    ', state.fg, state.bg, state.attrs)
 			cx += 4
 			continue
 		}
-		cluster += ch.str()
-		w := utf8_str_visible_length(cluster)
-		if w == 0 {
-			continue
-		}
-		r.set_cell(cx, cy, cluster, state.fg, state.bg, state.attrs)
-		cx += w
-		cluster = ''
-	}
-	if cluster != '' {
-		w := utf8_str_visible_length(cluster)
-		if w > 0 {
-			r.set_cell(cx, cy, cluster, state.fg, state.bg, state.attrs)
+		next := cluster + ch.str()
+		next_width := utf8_str_visible_length(next)
+		if cluster != '' && next_width > cluster_width {
+			r.flush_cluster(cluster, cx, cy, state)
+			cx += cluster_width
+			cluster = ch.str()
+			cluster_width = utf8_str_visible_length(cluster)
+		} else {
+			cluster = next
+			cluster_width = next_width
 		}
 	}
+	r.flush_cluster(cluster, cx, cy, state)
+}
+
+fn (mut r Renderer) flush_cluster(text string, x int, y int, state SgrState) {
+	if text == '' {
+		return
+	}
+	r.set_cell(x, y, text, state.fg, state.bg, state.attrs)
 }
 
 struct SgrState {

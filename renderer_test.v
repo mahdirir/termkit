@@ -86,6 +86,20 @@ fn test_resize() {
 	assert r.frame().contains('xy')
 }
 
+fn test_combining_marks_stay_with_base() {
+	mut r := new_renderer(8, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, 'e\u0301x', '', '', 0)
+	assert r.cells[0].text == 'e\u0301'
+	assert r.cells[0].width == 1
+	assert r.cells[1].text == 'x'
+	r.clear()
+	r.draw_text(0, 0, '世\u0301x', '', '', 0)
+	assert r.cells[0].text == '世\u0301'
+	assert r.cells[0].width == 2
+	assert r.cells[2].text == 'x'
+}
+
 fn test_draw_text_newlines() {
 	mut r := new_renderer(5, 3, .ansi)
 	r.sync_updates = false
