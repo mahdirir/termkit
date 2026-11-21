@@ -88,6 +88,13 @@ fn test_spinner_and_progress() {
 	assert bar.view().contains('50%')
 }
 
+fn test_widget_out_of_range_fields() {
+	mut spin := Spinner{ frames: ['a', 'b'], frame: 7 }
+	assert spin.view() == 'b'
+	mut bar := Progress{ percent: 150, width: 6 }
+	assert bar.view().contains('100%')
+}
+
 fn test_textarea() {
 	mut area := TextArea{}
 	area.set_text('one\ntwo')

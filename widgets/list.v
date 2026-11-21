@@ -70,15 +70,11 @@ fn (mut l List) clamp() {
 			break
 		}
 	}
-	page := if l.height > 0 { l.height } else { 1 }
 	if pos < 0 {
 		pos = 0
 	}
 	if pos >= vis.len {
 		pos = vis.len - 1
-	}
-	if pos < l.selected - page + 1 {
-		l.selected = vis[pos]
 	}
 	l.selected = vis[pos]
 }

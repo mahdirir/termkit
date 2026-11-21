@@ -21,10 +21,17 @@ pub fn (mut p Progress) set(value int) {
 // view renders the bar and percentage.
 pub fn (p Progress) view() string {
 	width := if p.width < 4 { 4 } else { p.width }
-	filled := p.percent * (width - 2) / 100
+	percent := if p.percent < 0 {
+		0
+	} else if p.percent > 100 {
+		100
+	} else {
+		p.percent
+	}
+	filled := percent * (width - 2) / 100
 	mut bar := ''
 	for i in 0 .. width - 2 {
 		bar += if i < filled { '█' } else { '░' }
 	}
-	return '[${bar}] ${p.percent}%'
+	return '[${bar}] ${percent}%'
 }

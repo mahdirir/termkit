@@ -116,6 +116,7 @@ termkit/
 - [x] `hstack`/`vstack` accumulate sizes for default-position rects.
 - [x] Border titles truncate on rune boundaries; man pages emit valid mdoc lists.
 - [x] Stopwatch/Timer do not count paused time after a restart.
+- [x] Spinner/Progress views tolerate out-of-range public field values.
 - [x] Tabs and collapsible Tree widgets.
 
 ### M5 — CLI core (complete)

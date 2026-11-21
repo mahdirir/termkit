@@ -27,6 +27,7 @@ pub fn (s Spinner) view() string {
 	if s.frames.len == 0 {
 		return s.label
 	}
-	frame := s.frames[s.frame]
+	index := if s.frame < 0 { 0 } else { s.frame % s.frames.len }
+	frame := s.frames[index]
 	return if s.label == '' { frame } else { '${frame} ${s.label}' }
 }
