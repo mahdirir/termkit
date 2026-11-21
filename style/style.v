@@ -24,6 +24,7 @@ pub mut:
 	attrs   u8
 	border  BorderKind = .none
 	padding int
+	margin  int
 	align   layout.Align = .start
 	width   int
 	title   string
@@ -87,9 +88,45 @@ fn repeat(s string, n int) string {
 	return out
 }
 
-// render lays out text with padding, alignment and an optional border. The
-// returned string contains SGR codes that the termkit renderer understands.
+// render lays out text with margin, padding, alignment and an optional
+// border. The returned string contains SGR codes the termkit renderer parses.
 pub fn (s Style) render(text string) string {
+	margin := if s.margin < 0 { 0 } else { s.margin }
+	if margin == 0 {
+		return s.render_block(text)
+	}
+	mut inner_style := s
+	inner_style.margin = 0
+	inner_style.width = if s.width > 0 { s.width - 2 * margin } else { 0 }
+	if inner_style.width < 1 {
+		inner_style.width = 1
+	}
+	block := inner_style.render_block(text)
+	reset := '\x1b[0m'
+	core := if block.ends_with(reset) { block[..block.len - reset.len] } else { block }
+	lines := core.split('\n')
+	mut width := 0
+	for line in lines {
+		w := term.printable_len(line)
+		if w > width {
+			width = w
+		}
+	}
+	total := width + 2 * margin
+	mut out := ''
+	for _ in 0 .. margin {
+		out += repeat(' ', total) + '\n'
+	}
+	for line in lines {
+		out += repeat(' ', margin) + line + repeat(' ', margin) + '\n'
+	}
+	for _ in 0 .. margin {
+		out += repeat(' ', total) + '\n'
+	}
+	return out.trim_right('\n') + reset
+}
+
+fn (s Style) render_block(text string) string {
 	lines := text.split('\n')
 	mut content_width := 0
 	for line in lines {

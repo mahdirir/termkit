@@ -34,6 +34,11 @@ fn (mut t TextInput) insert(text string) {
 	t.position += text.len
 }
 
+// is_focused reports whether this input accepts keyboard input.
+pub fn (t &TextInput) is_focused() bool {
+	return t.focused
+}
+
 // update handles editing keys and printable text.
 pub fn (mut t TextInput) update(msg termkit.Msg) {
 	if !t.focused {

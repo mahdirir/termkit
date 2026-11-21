@@ -24,6 +24,10 @@ pub mut:
 	deprecated    string
 	default_value []string
 	choices       []string
+	// negatable allows --no-<name> to set a bool flag to false.
+	negatable bool
+	// validate transforms or rejects a value supplied for this flag.
+	validate ?fn (string) !string
 mut:
 	found bool
 	value []string
@@ -81,6 +85,9 @@ pub fn (f &Flag) get_value_or_default() []string {
 }
 
 fn (f &Flag) matches(token string) bool {
+	if f.flag == .bool && f.negatable && f.name != '' && token == '--no-${f.name}' {
+		return true
+	}
 	if f.name != '' && token == '--${f.name}' {
 		return true
 	}
@@ -98,7 +105,9 @@ fn (f &Flag) matches(token string) bool {
 
 fn (mut f Flag) set_value(token string, next string) !int {
 	if f.flag == .bool {
-		if token.contains('=') {
+		if token.starts_with('--no-') {
+			f.value = ['false']
+		} else if token.contains('=') {
 			f.value = [token.split('=')[1]]
 		} else {
 			f.value = ['true']
@@ -116,6 +125,9 @@ fn (mut f Flag) set_value(token string, next string) !int {
 	}
 	if f.choices.len > 0 && val !in f.choices {
 		return error('invalid value `${val}` for flag `${f.name}`')
+	}
+	if validator := f.validate {
+		val = validator(val) or { return error('invalid value for flag `${f.name}`: ${err}') }
 	}
 	f.value << val
 	return if token.contains('=') { 0 } else { 1 }
@@ -159,10 +171,14 @@ pub mut:
 	args_rule   ArgsRule
 	hidden      bool
 	deprecated  string
-	before      Hook = unsafe { nil }
-	execute_fn  Hook = unsafe { nil }
-	after       Hook = unsafe { nil }
-	init_fn     ?fn ()
+	// mutually_exclusive lists groups of flag names that cannot be combined.
+	mutually_exclusive [][]string
+	// required_together lists groups where supplying one requires all.
+	required_together [][]string
+	before            Hook = unsafe { nil }
+	execute_fn        Hook = unsafe { nil }
+	after             Hook = unsafe { nil }
+	init_fn           ?fn ()
 mut:
 	parent       &Command = unsafe { nil }
 	inherited    []Flag
@@ -267,9 +283,13 @@ fn (mut c Command) dispatch(mut args []string) ! {
 fn (mut c Command) parse_long(token string, args []string, pos int) !int {
 	name_part := token[2..]
 	name := if name_part.contains('=') { name_part.split('=')[0] } else { name_part }
+	lookup := if name.starts_with('no-') { name[3..] } else { name }
 	for i in 0 .. c.all_flags.len {
 		mut f := &c.all_flags[i]
-		if f.name != name {
+		if f.name != lookup {
+			continue
+		}
+		if !f.matches(token) {
 			continue
 		}
 		next := if pos + 1 < args.len { args[pos + 1] } else { '' }
@@ -346,6 +366,32 @@ fn (mut c Command) finish() ! {
 			return error('flag `${f.name}` is required by `${c.full_name()}`')
 		}
 	}
+	for group in c.mutually_exclusive {
+		mut count := 0
+		for name in group {
+			if c.flag_found(name) {
+				count++
+			}
+		}
+		if count > 1 {
+			return error('flags ${group.join(', ')} are mutually exclusive')
+		}
+	}
+	for group in c.required_together {
+		mut any := false
+		for name in group {
+			if c.flag_found(name) {
+				any = true
+			}
+		}
+		if any {
+			for name in group {
+				if !c.flag_found(name) {
+					return error('flag `${name}` is required together with ${group.join(', ')}')
+				}
+			}
+		}
+	}
 	match c.args_rule {
 		.none {
 			if c.args.len > 0 {
@@ -383,6 +429,15 @@ fn (mut c Command) finish() ! {
 	if !isnil(c.after) {
 		c.after()!
 	}
+}
+
+fn (c &Command) flag_found(name string) bool {
+	for f in c.all_flags {
+		if (f.name == name || f.abbrev == name) && f.found {
+			return true
+		}
+	}
+	return false
 }
 
 // flag returns a pointer to a flag in this command or its ancestors.

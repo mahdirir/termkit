@@ -106,6 +106,68 @@ fn test_completion_result() {
 	assert completion_result(cmd, ['--']).contains('--help')
 }
 
+fn uppercase_value(s string) !string {
+	return s.to_upper()
+}
+
+fn test_negatable_bool() ! {
+	mut cmd := Command{
+		name:       'app'
+		execute_fn: mark_executed
+		flags:      [Flag{ name: 'color', flag: .bool, negatable: true }]
+	}
+	cmd.run(['app', '--no-color'])!
+	assert cmd.flag('color')!.get_bool()! == false
+}
+
+fn test_flag_validator() ! {
+	mut cmd := Command{
+		name:       'app'
+		execute_fn: mark_executed
+		flags:      [Flag{ name: 'name', validate: uppercase_value }]
+	}
+	cmd.run(['app', '--name', 'v'])!
+	assert (cmd.flag('name')!.get_string()!) == 'V'
+}
+
+fn test_flag_validator_error() {
+	mut cmd := Command{
+		name:  'app'
+		flags: [Flag{ name: 'name', validate: fn (s string) !string { return error('bad value') } }]
+	}
+	cmd.run(['app', '--name', 'v']) or {
+		assert err.msg().contains('bad value')
+		return
+	}
+	assert false
+}
+
+fn test_mutually_exclusive_flags() {
+	mut cmd := Command{
+		name:               'app'
+		flags:              [Flag{ name: 'a', flag: .bool }, Flag{ name: 'b', flag: .bool }]
+		mutually_exclusive: [['a', 'b']]
+	}
+	cmd.run(['app', '--a', '--b']) or {
+		assert err.msg().contains('mutually exclusive')
+		return
+	}
+	assert false
+}
+
+fn test_required_together_flags() {
+	mut cmd := Command{
+		name:              'app'
+		flags:             [Flag{ name: 'user', flag: .bool }, Flag{ name: 'token', flag: .bool }]
+		required_together: [['user', 'token']]
+	}
+	cmd.run(['app', '--user']) or {
+		assert err.msg().contains('required together')
+		return
+	}
+	assert false
+}
+
 fn test_manpage() {
 	mut cmd := Command{ name: 'app', description: 'demo' }
 	cmd.flags << Flag{ name: 'name', description: 'a name' }

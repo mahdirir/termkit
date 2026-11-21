@@ -33,7 +33,7 @@ v install metif12.termkit
 | `termkit.style` | Foreground/background, attributes, borders, padding, alignment |
 | `termkit.widgets` | Text input, viewport, list, table, spinner, progress, help |
 | `termkit.layout` | Rectangles, constraints, horizontal/vertical composition |
-| `termkit.cli` | Commands, flags, validation, help/man, suggestions, completion |
+| `termkit.cli` | Commands, flags, validation, flag groups, help/man, suggestions, completion |
 
 ## Quickstart: an MVU app
 
@@ -113,6 +113,7 @@ fn main() {
 - `examples/cli_app.v` — a command tree with flags, help, version and
   completion support.
 - `examples/widgets.v` — a filterable list with a text input and help bar.
+- `examples/focus.v` — tab navigation between text inputs and a file picker.
 
 Run them from the repository root:
 
@@ -135,6 +136,8 @@ v run examples/cli_app.v -- --help
   platform support already present in `term.ui`.
 - **Testable without a terminal.** Rendering, widgets, parsing, help and
   completion are pure functions over buffers and strings.
+- **Composable focus.** `Focusable` widgets are grouped with Tab / Shift+Tab
+  routing, and the file picker plugs into the same group.
 
 ## Relationship to existing V modules
 

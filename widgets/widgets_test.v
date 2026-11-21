@@ -90,6 +90,40 @@ fn test_table_and_paginator() {
 	assert page.view().contains('2/3')
 }
 
+fn test_focus_group() {
+	mut group := new_focus_group()
+	group.add(TextInput{})
+	group.add(TextInput{})
+	assert group.widgets[0].is_focused()
+	assert !group.widgets[1].is_focused()
+	group.update(termkit.KeyMsg{ key: 'a' })
+	assert group.view().contains('a')
+	group.update(termkit.KeyMsg{ key: termkit.key_tab })
+	assert !group.widgets[0].is_focused()
+	assert group.widgets[1].is_focused()
+	group.update(termkit.KeyMsg{ key: 'b' })
+	assert group.view().contains('b')
+	mut shift := unsafe { termkit.Modifiers(0) }
+	shift |= .shift
+	group.update(termkit.KeyMsg{ key: termkit.key_tab, modifiers: shift })
+	assert group.widgets[0].is_focused()
+	assert group.view().contains('•')
+}
+
+fn test_filepicker() {
+	mut picker := new_filepicker('testdata') or {
+		// The package has no testdata directory; use a known directory instead.
+		_ = err
+		new_filepicker('.')!
+	}
+	assert picker.entries.len > 0
+	picker.update(termkit.KeyMsg{ key: termkit.key_down })
+	assert picker.cursor == 1
+	picker.update(termkit.KeyMsg{ key: termkit.key_home })
+	assert picker.cursor == 0
+	assert picker.view().contains('.')
+}
+
 fn test_cursor_blink() {
 	mut cursor := Cursor{}
 	assert cursor.view() == '█'

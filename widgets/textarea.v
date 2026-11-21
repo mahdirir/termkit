@@ -13,6 +13,21 @@ pub mut:
 	focused bool = true
 }
 
+// focus marks the text area as accepting keys.
+pub fn (mut t TextArea) focus() {
+	t.focused = true
+}
+
+// blur marks the text area as not accepting keys.
+pub fn (mut t TextArea) blur() {
+	t.focused = false
+}
+
+// is_focused reports whether the text area accepts keyboard input.
+pub fn (t &TextArea) is_focused() bool {
+	return t.focused
+}
+
 // set_text replaces the content and moves the cursor to the end.
 pub fn (mut t TextArea) set_text(text string) {
 	t.lines = if text == '' { [''] } else { text.split('\n') }

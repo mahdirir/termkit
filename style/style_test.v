@@ -26,6 +26,14 @@ fn test_render_border() {
 	assert out.ends_with('┘\x1b[0m')
 }
 
+fn test_render_margin() {
+	s := Style{ border: .single, margin: 1, width: 12 }
+	out := s.render('hi')
+	assert out.starts_with('            \n')
+	assert out.contains('┌')
+	assert out.ends_with(' \x1b[0m')
+}
+
 fn test_render_alignment() {
 	mut s := Style{ width: 8, align: .end }
 	assert s.render('x').contains('       x')

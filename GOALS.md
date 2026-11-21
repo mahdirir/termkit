@@ -31,8 +31,9 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
 
 4. **A useful component set.**
    - Single-line text input and multi-line text area.
-   - Scrollable viewport, list with filtering, table.
+   - Scrollable viewport, list with filtering, table, file picker.
    - Spinner, progress bar, paginator, help/keybinding display, cursor.
+   - Tab/Shift+Tab focus groups over any `Focusable` widget.
    - Every component is independently testable and composable.
 
 5. **Styling and layout.**
@@ -50,20 +51,25 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - Shell completion generation and a dynamic `__complete` protocol.
    - Error returns instead of `exit()` inside the parser; injectable streams.
 
-7. **Cross-platform behaviour.**
+7. **Cobra-class flag semantics.**
+   - Negatable bool flags (`--no-color`), custom value validators, mutually
+     exclusive and required-together flag groups.
+   - Hidden and deprecated flags, choice sets, repeatable flags and aliases.
+
+8. **Cross-platform behaviour.**
    - Linux, macOS and Windows via the platform support already in `term.ui`.
    - No vendored C libraries and no new OS-level dependencies.
 
-8. **Zero-dependency VPM module.**
+9. **Zero-dependency VPM module.**
    - `v install metif12.termkit` works with a stock V toolchain.
    - No module-level globals that leak between programs.
 
-9. **Stdlib-ready shape.**
+10. **Stdlib-ready shape.**
    - Package boundaries match the eventual `term.ui` and `cli` extensions.
    - `PLAN.md` records the exact file-to-stdlib mapping.
    - No circular imports back into the module root from subpackages.
 
-10. **Documentation and examples.**
+11. **Documentation and examples.**
     - README, GOALS, PLAN, doc comments on every public symbol.
     - At least one runnable example per major feature area.
     - Markdown and V sources pass `v check-md` and `v fmt -l`.

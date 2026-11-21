@@ -88,7 +88,7 @@ termkit/
 - [x] `repaint()`, `suspend()`, `resume()`; FPS pacing comes from `term.ui`.
 - [x] Golden tests that assert exact escape output for small scenes.
 
-### M4 — Style, layout and widgets (mostly complete)
+### M4 — Style, layout and widgets (complete)
 
 - [x] `style`: colors, attributes, borders, padding, alignment.
 - [x] `layout`: `Rect`, `Size`, alignment, hstack/vstack, join, intersect.
@@ -96,7 +96,9 @@ termkit/
 - [x] Renderer parses embedded SGR so styled views survive diffing.
 - [x] Each widget: pure update over `Msg`, pure `view() string`, no globals.
 - [x] Tests for update transitions and rendered output.
-- [x] Remaining widgets: textarea, table, paginator, cursor.
+- [x] Remaining widgets: textarea, table, paginator, cursor, file picker.
+- [x] `Focusable` interface and Tab/Shift+Tab `FocusGroup`.
+- [x] Style margins.
 
 ### M5 — CLI core (mostly complete)
 
@@ -104,8 +106,10 @@ termkit/
 - [x] Persistent flags, shorthands, `--`, clustered shorts, aliases.
 - [x] Typed getters, defaults, repeatable flags, choice sets.
 - [x] Hooks and `init_fn`; positional arg rules.
-- [x] Generated help and version output.
+- [x] Generated help and version output, man pages.
 - [x] Suggestions via edit distance.
+- [x] Negatable bool flags, custom validators, mutually exclusive and
+      required-together flag groups.
 - [x] Man page generation.
 - [ ] Injectable streams, context cancellation.
 
@@ -113,7 +117,8 @@ termkit/
 
 - [x] Completion scripts for bash/zsh/fish/powershell and `__complete`.
 - [x] Hidden/deprecated flags and commands, required flags.
-- [x] Examples: `examples/counter.v`, `examples/cli_app.v`, `examples/widgets.v`.
+- [x] Examples: `examples/counter.v`, `examples/cli_app.v`,
+      `examples/widgets.v`, `examples/focus.v`.
 - [x] Full `v fmt -l`, `v check-md`, `v -silent test .` pass locally.
 - [x] Golden completion fixture for the bash script.
 - [ ] Push to `metif12/termkit` and VPM registration after approval.

@@ -57,6 +57,11 @@ fn (mut l List) clamp() {
 	l.selected = vis[pos]
 }
 
+// is_focused reports whether this list accepts keyboard input.
+pub fn (l &List) is_focused() bool {
+	return l.focused
+}
+
 // selected_item returns the currently selected string, if any.
 pub fn (l List) selected_item() string {
 	vis := l.visible()
