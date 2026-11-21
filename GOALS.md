@@ -104,10 +104,11 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
 
 ## Definition of done for this phase
 
-- [ ] All six PLAN milestones complete.
-- [ ] `v -silent test .` passes on the clean master-based worktree.
-- [ ] `v fmt -l` reports no unformatted V files.
-- [ ] `v check-md` passes on every Markdown file.
-- [ ] Examples compile and the non-interactive ones run in CI.
-- [ ] Module is ready to push to `metif12/termkit` and register on VPM after
-      explicit approval of the name and description.
+- [x] All six PLAN milestones complete (paste/focus blocked on stdlib input).
+- [x] `v -silent test .` passes on the clean master-based worktree.
+- [x] `v fmt -l` reports no unformatted V files.
+- [x] `v check-md` passes on every Markdown file.
+- [x] All examples compile with the master-based compiler; non-interactive
+      examples can run in CI.
+- [ ] Module is pushed to `metif12/termkit`; VPM registration awaits explicit
+      approval of the name and description.

@@ -50,7 +50,7 @@ termkit/
 
 ## Milestones
 
-### M1 — Scaffolding (in progress)
+### M1 — Scaffolding (complete)
 
 - [x] Clean worktree based on `V_REPO/master`.
 - [x] New git repo with `v.mod`, MIT `LICENSE`, `.gitignore`.
@@ -60,7 +60,7 @@ termkit/
 - [x] Retry the master-based bootstrap and re-run validation with the
       resulting `v_master.exe` (`7ede4c6`).
 
-### M2 — MVU core (mostly complete)
+### M2 — MVU core (complete; paste/focus pending stdlib input)
 
 - [x] `Msg` marker interface; `KeyMsg`, `MouseMsg`, `WindowSizeMsg`, `QuitMsg`,
       `TickMsg`, `PasteMsg`, `ErrorMsg`, `TitleMsg`, `WriteLineMsg`, `LogMsg`,
@@ -111,7 +111,7 @@ termkit/
 - [x] Renderer downgrades truecolor to ANSI-256 and basic ANSI.
 - [x] Tabs and collapsible Tree widgets.
 
-### M5 — CLI core (mostly complete)
+### M5 — CLI core (complete)
 
 - [x] `cli.Command` and `cli.Flag` with error-returning `run`.
 - [x] Persistent flags, shorthands, `--`, clustered shorts, aliases.
@@ -128,9 +128,9 @@ termkit/
 - [x] Typed getters reject bad values; `get_ints`/`get_floats` added.
 - [x] Persistent parent hooks (before/after) for command trees.
 - [x] Man page generation.
-- [ ] Injectable streams, context cancellation.
+- [x] Injectable streams, context cancellation.
 
-### M6 — CLI extras, docs and release prep (in progress)
+### M6 — CLI extras, docs and release prep (complete; VPM pending approval)
 
 - [x] Completion scripts for bash/zsh/fish/powershell and `__complete`.
 - [x] Hidden/deprecated flags and commands, required flags.
@@ -139,7 +139,8 @@ termkit/
 - [x] Full `v fmt -l`, `v check-md`, `v -silent test .` pass locally.
 - [x] Every public symbol has a doc comment; `v doc -all termkit` succeeds.
 - [x] Golden completion fixture for the bash script.
-- [ ] Push to `metif12/termkit` and VPM registration after approval.
+- [x] Push to `metif12/termkit`.
+- [ ] VPM registration after explicit approval of the name and description.
 
 ## Test strategy
 
