@@ -39,6 +39,8 @@ mut:
 	renderer    ?Renderer
 	next_id     int
 	quitting    bool
+	pasting     bool
+	paste_buf   string
 }
 
 // new_program creates a Program for model.
@@ -67,6 +69,10 @@ fn (mut p Program) call_cleanup() {
 
 fn cleanup_cb(user_data voidptr) {
 	mut p := unsafe { &Program(user_data) }
+	if !isnil(p.ui) {
+		p.ui.write('\x1b[?2004l\x1b[?1004l')
+		p.ui.flush()
+	}
 	if f := p.opts.cleanup_fn {
 		f()
 	}
@@ -139,12 +145,29 @@ pub fn (mut p Program) run() ! {
 		hide_cursor:          p.opts.hide_cursor
 	})
 	p.ui = ctx
+	// Ask the terminal for bracketed paste and focus-change reporting. Both
+	// modes are best-effort; terminals that ignore them keep normal behaviour.
+	p.ui.write('\x1b[?2004h\x1b[?1004h')
+	p.ui.flush()
 	p.dispatch(p.model.init())
 	ctx.run()!
 }
 
 fn (mut p Program) handle(msg Msg) {
 	match msg {
+		PasteStartMsg {
+			p.pasting = true
+			p.paste_buf = ''
+			return
+		}
+		PasteEndMsg {
+			if p.pasting && p.paste_buf.len > 0 {
+				p.send(PasteMsg{ text: p.paste_buf })
+			}
+			p.pasting = false
+			p.paste_buf = ''
+			return
+		}
 		QuitMsg {
 			p.quitting = true
 			return
@@ -178,6 +201,19 @@ fn (mut p Program) handle(msg Msg) {
 			p.resize_renderer(msg.width, msg.height)
 		}
 		else {}
+	}
+	if p.pasting {
+		match msg {
+			KeyMsg {
+				if msg.utf8.len > 0 {
+					p.paste_buf += msg.utf8
+				} else if msg.key.len > 0 {
+					p.paste_buf += msg.key
+				}
+				return
+			}
+			else {}
+		}
 	}
 	updated, cmd := p.model.update(msg)
 	p.model = updated
@@ -280,7 +316,7 @@ fn frame_cb(user_data voidptr) {
 		// would skip the program's cleanup hook and terminal restore.
 		p.call_cleanup()
 		if !isnil(p.ui) {
-			mut restore := '\x1b[0m\x1b[?25h'
+			mut restore := '\x1b[0m\x1b[?25h\x1b[?2004l\x1b[?1004l'
 			if p.opts.alt_screen {
 				restore += '\x1b[?1049l'
 			}
@@ -366,10 +402,41 @@ pub fn (mut p Program) resume() {
 	p.repaint()
 }
 
+// is_repeat_report recognises a CSI-u key report with event type 3 (repeat).
+fn is_repeat_report(raw string) bool {
+	return raw.starts_with('\x1b[') && raw.ends_with('u') && raw.contains(':3')
+}
+
 fn msg_from_event(e &tui.Event) Msg {
+	if e.typ == .key_down || e.typ == .key_up {
+		// term.ui passes unrecognised escape sequences through in utf8. That
+		// lets termkit support bracketed paste and focus reports without
+		// changing the stdlib input layer.
+		match e.utf8 {
+			'\x1b[200~' {
+				return PasteStartMsg{}
+			}
+			'\x1b[201~' {
+				return PasteEndMsg{}
+			}
+			'\x1b[I' {
+				return FocusMsg{}
+			}
+			'\x1b[O' {
+				return BlurMsg{}
+			}
+			else {}
+		}
+	}
 	match e.typ {
 		.key_down, .key_up {
-			kind := if e.typ == .key_up { KeyEventKind.release } else { KeyEventKind.press }
+			kind := if e.typ == .key_up {
+				KeyEventKind.release
+			} else if is_repeat_report(e.utf8) {
+				KeyEventKind.repeat
+			} else {
+				KeyEventKind.press
+			}
 			return KeyMsg{
 				key:       key_for_event(e)
 				code:      int(e.code)

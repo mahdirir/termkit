@@ -108,6 +108,11 @@ fn main() {
 }
 ```
 
+## Guides
+
+See [docs/README.md](docs/README.md) for the full guide index. Generated API
+references for every package live in [docs/api](docs/api).
+
 ## Examples
 
 - `examples/counter.v` — a full MVU app with keyboard input and diffed output.
@@ -121,6 +126,9 @@ fn main() {
 - `examples/headless.v` — MVU driven by injected messages, no TTY required.
 - `examples/cli_complete.v` — subcommands, aliases, completion, persistent
   hooks and a typed flag with a default.
+
+Larger applications are in `examples/apps/`: `todo.v`, `file_browser.v`,
+`log_viewer.v` and `cli_tool.v`.
 
 Run them from the repository root:
 
@@ -223,29 +231,27 @@ The API is inspired by Bubble Tea, Bubbles, Lip Gloss and Cobra, and by
 closures. No code from those projects is used; this is an independent
 implementation under the MIT license.
 
-## Input limitations and fallbacks
+## Paste, focus and repeat
 
-`term.ui` does not currently surface bracketed-paste or terminal focus events.
-The `PasteMsg`, `FocusMsg` and `BlurMsg` types are part of the public API, but a
-program will not receive them from terminal input yet:
+`term.ui` has no dedicated event types for bracketed paste, terminal focus or
+key repeat, but it passes unrecognised escape sequences through in
+`Event.utf8`. termkit uses that path — no stdlib patching:
 
-- **Paste.** For a large paste, `term.ui` reports the text as a burst of
-  ordinary key events. A model that needs paste semantics should accumulate
-  consecutive printable `KeyMsg`s (or `utf8` fields) and produce its own
-  `PasteMsg`. The text input and text area widgets accept `PasteMsg` when a
-  driver supplies one.
-- **Focus.** `FocusMsg`/`BlurMsg` can be sent explicitly by an embedding
-  program. For keyboard focus between widgets, use `FocusGroup` and the
-  `Focusable` interface; Tab and Shift+Tab routing works today without any
-  terminal support.
-- **Repeat.** `term.ui` reports held keys as a stream of `key_down` events with
-  no repeat flag, so the runtime delivers them as `KeyMsg` with kind `.press`.
-  `KeyEventKind.repeat` is available for messages an embedding driver supplies;
-  models that need to distinguish repeats should coalesce consecutive presses
-  of the same key themselves.
+- **Paste.** On startup the runtime requests bracketed paste (`CSI ? 2004 h`).
+  The `CSI 200 ~` / `CSI 201 ~` markers are turned into internal messages; all
+  key events between them are accumulated and delivered to the model as one
+  `PasteMsg`. The text input and text area widgets already accept it.
+- **Focus.** The runtime requests focus reporting (`CSI ? 1004 h`). `CSI I`
+  and `CSI O` become `FocusMsg` and `BlurMsg`. For focus between widgets use
+  `FocusGroup` and `Focusable`; Tab / Shift+Tab routing is independent of the
+  terminal.
+- **Repeat.** CSI-u key reports with event type 3 are delivered as `KeyMsg`
+  with kind `.repeat`; type 2 reports become `.release`.
 
-True bracketed paste and focus tracking would need additions to `term.ui`'s
-input layer. Those changes belong upstream; termkit does not patch stdlib.
+Both terminal modes are best-effort: terminals that ignore them simply keep
+sending ordinary events, and the program behaves as before. Windows' native
+console API does not report these sequences; Windows Terminal with the
+sequences enabled is expected to work.
 
 ## Deferred work
 

@@ -3,6 +3,7 @@ module termkit
 
 import context
 import os
+import term.ui as tui
 import time
 
 struct CounterModel {
@@ -39,6 +40,46 @@ fn (mut m CounterModel) update(msg Msg) (Model, Cmd) {
 
 fn (mut m CounterModel) view() string {
 	return 'n=${m.n}:${m.seen.join(',')}'
+}
+
+struct PasteModel {
+mut:
+	pasted        string
+	focus_changes int
+	repeats       int
+}
+
+fn (mut m PasteModel) init() Cmd {
+	return no_cmd
+}
+
+fn (mut m PasteModel) update(msg Msg) (Model, Cmd) {
+	match msg {
+		PasteMsg {
+			m.pasted = msg.text
+		}
+		FocusMsg {
+			m.focus_changes++
+		}
+		BlurMsg {
+			m.focus_changes--
+		}
+		KeyMsg {
+			if msg.kind == .repeat {
+				m.repeats++
+			}
+		}
+		else {}
+	}
+	return m, no_cmd
+}
+
+fn (mut m PasteModel) view() string {
+	return m.pasted
+}
+
+fn new_paste_program() Program {
+	return new_program(&PasteModel{}, ProgramOpts{ without_renderer: true })
 }
 
 fn new_test_program() Program {
@@ -138,6 +179,61 @@ __global (
 
 fn mark_cleanup() {
 	cleanup_called = true
+}
+
+fn test_msg_from_event_special_sequences() {
+	start := msg_from_event(&tui.Event{ typ: .key_down, utf8: '\x1b[200~' })
+	assert start is PasteStartMsg
+	end := msg_from_event(&tui.Event{ typ: .key_down, utf8: '\x1b[201~' })
+	assert end is PasteEndMsg
+	focus := msg_from_event(&tui.Event{ typ: .key_down, utf8: '\x1b[I' })
+	assert focus is FocusMsg
+	blur := msg_from_event(&tui.Event{ typ: .key_down, utf8: '\x1b[O' })
+	assert blur is BlurMsg
+}
+
+fn test_bracketed_paste_accumulates_into_one_message() {
+	mut p := new_paste_program()
+	p.send(PasteStartMsg{})
+	p.send(KeyMsg{ key: 'h' })
+	p.send(KeyMsg{ key: 'i' })
+	p.send(PasteEndMsg{})
+	p.process_queue()
+	assert p.view() == 'hi'
+}
+
+fn test_paste_through_raw_terminal_events() {
+	mut p := new_paste_program()
+	p.send(msg_from_event(&tui.Event{ typ: .key_down, utf8: '\x1b[200~' }))
+	p.send(msg_from_event(&tui.Event{ typ: .key_down, utf8: 'a' }))
+	p.send(msg_from_event(&tui.Event{ typ: .key_down, utf8: '\x1b[201~' }))
+	p.process_queue()
+	assert p.view() == 'a'
+}
+
+fn test_focus_blur_and_repeat_from_events() {
+	mut p := new_paste_program()
+	p.send(msg_from_event(&tui.Event{ typ: .key_down, utf8: '\x1b[I' }))
+	p.send(msg_from_event(&tui.Event{ typ: .key_down, utf8: '\x1b[O' }))
+	repeat_evt := tui.Event{
+		typ:  .key_down
+		code: .a
+		utf8: '\x1b[97;1:3u'
+	}
+	repeat_msg := msg_from_event(&repeat_evt)
+	match repeat_msg {
+		KeyMsg {
+			assert repeat_msg.kind == .repeat
+		}
+		else {
+			assert false
+		}
+	}
+	p.send(repeat_msg)
+	p.process_queue()
+	model := p.model as PasteModel
+	assert model.focus_changes == 0
+	assert model.repeats == 1
 }
 
 fn test_cleanup_hook_on_normal_quit() {

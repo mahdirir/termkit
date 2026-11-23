@@ -97,6 +97,13 @@ pub:
 // QuitMsg asks the runtime to stop the program.
 pub struct QuitMsg {}
 
+// PasteStartMsg marks the start of a bracketed paste. The runtime consumes it
+// and accumulates following key events into a single PasteMsg.
+pub struct PasteStartMsg {}
+
+// PasteEndMsg marks the end of a bracketed paste.
+pub struct PasteEndMsg {}
+
 // PasteMsg carries text that arrived as a single bracketed paste.
 pub struct PasteMsg {
 pub:

@@ -61,7 +61,7 @@ termkit/
 - [x] Retry the master-based bootstrap and re-run validation with the
       resulting `v_master.exe` (`7ede4c6`).
 
-### M2 — MVU core (complete; paste/focus pending stdlib input)
+### M2 — MVU core (complete)
 
 - [x] `Msg` marker interface; `KeyMsg`, `MouseMsg`, `WindowSizeMsg`, `QuitMsg`,
       `TickMsg`, `PasteMsg`, `ErrorMsg`, `TitleMsg`, `WriteLineMsg`, `LogMsg`,
@@ -79,8 +79,8 @@ termkit/
 - [x] Keybinding map type (`KeyMap`).
 - [x] Headless output injection (`ProgramOpts.out`), cancel hook and
       `context.Context` cancellation.
-- [ ] Real bracketed paste and focus/blur require stdlib input changes; the
-      message types exist but are not produced yet.
+- [x] Bracketed paste, focus/blur and repeat decoded from raw escape reports
+      without patching `term.ui`; modes enabled/disabled by the runtime.
 - [x] Mutex-protected queue; `Program.send` is safe from spawned threads,
       covered by a multi-worker stress test.
 - [x] `cleanup_fn` also fires on a normal `quit()`; terminal state is restored.
@@ -155,6 +155,10 @@ termkit/
       `cli_complete.v`; all nine compile, non-interactive ones run.
 - [x] C API: exported `tk_*` ABI, generated header, shared + static builds,
       `tools/build_c.v`, C smoke test passing for both library forms.
+- [x] Guides in `docs/` (getting started, MVU, widgets, CLI, styling/layout,
+      C API, testing) and generated API reference in `docs/api/`.
+- [x] Larger example apps in `examples/apps/`: todo, file browser, log viewer,
+      CLI tool.
 - [x] Full `v fmt -l`, `v check-md`, `v -silent test .` pass locally.
 - [x] Every public symbol has a doc comment; `v doc -all termkit` succeeds.
 - [x] Golden completion fixture for the bash script.
@@ -177,7 +181,7 @@ termkit/
 | Risk | Mitigation |
 | --- | --- |
 | V closure contexts are pinned for process lifetime | `Cmd` is a sum type; `CmdFn` only for non-capturing functions |
-| `term.ui` has no bracketed paste, focus or repeat events | Approximate paste from batched `utf8` events; document focus/repeat fallbacks |
+| `term.ui` has no bracketed paste, focus or repeat events | Decode raw escape reports from `Event.utf8`; no stdlib patches |
 | V backend quirks with interfaces and sum types | Spike each construct in M2 before building on it |
 | Large public API is hard to review later | Keep packages small, document every public symbol, examples per feature |
 | termkit stays standalone, outside `vlib` | Use only public `term.ui`/`vlib` APIs; no compiler or stdlib patches |
@@ -186,5 +190,5 @@ termkit/
 
 termkit is and remains a standalone VPM package. There is no plan to fold it
 into `vlib`, to patch `term.ui`/`vlib/cli`, or to open a `vlang/v` PR. Input
-features the stdlib does not expose (bracketed paste, focus, repeat) are
-handled through documented fallbacks in the module.
+features the stdlib does not expose (bracketed paste, focus, repeat) are decoded
+by termkit from raw escape reports; no stdlib changes are required.

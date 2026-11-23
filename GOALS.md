@@ -27,8 +27,8 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
 3. **Input parity.**
    - Key names, modifiers, repeated keys, mouse buttons and scroll, resize.
    - Bracketed paste delivered as a single message.
-   - Focus and blur messages once the stdlib input layer supports them; before
-     that, a documented fallback path.
+   - Focus, blur and repeat messages decoded from raw terminal reports without
+     modifying the stdlib input layer.
 
 4. **A useful component set.**
    - Single-line text input with optional mask and multi-line text area.
@@ -107,7 +107,7 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
 
 ## Definition of done for this phase
 
-- [x] All six PLAN milestones complete (paste/focus blocked on stdlib input).
+- [x] All six PLAN milestones complete.
 - [x] `v -silent test .` passes on the clean master-based worktree.
 - [x] `v fmt -l` reports no unformatted V files.
 - [x] `v check-md` passes on every Markdown file.
