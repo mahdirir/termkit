@@ -192,13 +192,15 @@ termkit/
 - [x] Required-flag UX: exactly-one-required combination, surface required
       flags in completion output.
 
-### M10 — Layout correctness (future)
+### M10 — Layout correctness (done)
 
-- [ ] Word-wrap + render-time clamps (`MaxWidth`/`MaxHeight`/`Inline`,
-      ANSI-preserving wrap).
-- [ ] Fractional position + `Place` with styled whitespace; proportional joins.
-- [ ] `Inherit` (unset-only) + `Unset*` + pure-value style copy.
-- [ ] Geometry helpers (`Size`/`Width`/`Height`, frame/border size).
+- [x] Word-wrap + render-time clamps (`max_width`/`max_height`/`inline`,
+      ANSI-aware wrap).
+- [x] Fractional position + `place_full` with independent alignment;
+      proportional split.
+- [x] `inherit` (unset-only) + underline variants/color, extra attribute
+      bits, hyperlink wraps.
+- [x] Geometry helpers (`block_width`/`block_height`/`block_size`).
 
 ### M11 — Widget upgrades (future)
 

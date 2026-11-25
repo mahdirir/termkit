@@ -1,5 +1,7 @@
 module layout
 
+import term
+
 // Align controls placement along an axis.
 pub enum Align {
 	start
@@ -142,16 +144,92 @@ pub fn vstack(rects []Rect) Rect {
 // place positions size inside outer using the given horizontal alignment and
 // vertical centering.
 pub fn place(outer Rect, size Size, align Align) Rect {
-	x := match align {
+	return place_full(outer, size, align, .center)
+}
+
+// place_full positions size inside outer using horizontal and vertical
+// alignment, clamping the result to outer.
+pub fn place_full(outer Rect, size Size, halign Align, valign Align) Rect {
+	x := match halign {
 		.start { outer.x }
 		.center { outer.x + (outer.width - size.width) / 2 }
 		.end { outer.right() - size.width }
 	}
-	y := outer.y + (outer.height - size.height) / 2
+	y := match valign {
+		.start { outer.y }
+		.center { outer.y + (outer.height - size.height) / 2 }
+		.end { outer.bottom() - size.height }
+	}
 	return Rect{
 		x:      if x < outer.x { outer.x } else { x }
 		y:      if y < outer.y { outer.y } else { y }
 		width:  min_or_zero(size.width, outer.width)
 		height: min_or_zero(size.height, outer.height)
 	}
+}
+
+// Position is a proportional placement in [0, 1]: 0 is start, 0.5 is center
+// and 1 is end. Intermediate values split proportionally.
+pub struct Position {
+pub:
+	value f32
+}
+
+// position clamps v into a valid Position.
+pub fn position(v f32) Position {
+	return Position{
+		value: if v < 0 {
+			0
+		} else if v > 1 {
+			1
+		} else {
+			v
+		}
+	}
+}
+
+// at returns the offset of a size-wide object inside total cells.
+pub fn (p Position) at(total int, size int) int {
+	if total <= size {
+		return 0
+	}
+	return int(p.value * f32(total - size))
+}
+
+// split_at divides total cells proportionally: the left part gets
+// pos.at(total, 0) cells and the right part gets the rest.
+pub fn split_at(total int, pos Position) (int, int) {
+	if total <= 0 {
+		return 0, 0
+	}
+	mut lw := pos.at(total, 0)
+	if lw < 0 {
+		lw = 0
+	}
+	if lw > total {
+		lw = total
+	}
+	return lw, total - lw
+}
+
+// block_width returns the visible width of the widest line in text.
+pub fn block_width(text string) int {
+	mut width := 0
+	for line in text.split('\n') {
+		w := term.printable_len(line)
+		if w > width {
+			width = w
+		}
+	}
+	return width
+}
+
+// block_height returns the number of lines in text.
+pub fn block_height(text string) int {
+	return text.split('\n').len
+}
+
+// block_size returns the visible width and line count of text.
+pub fn block_size(text string) Size {
+	return Size{ width: block_width(text), height: block_height(text) }
 }

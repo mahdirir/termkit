@@ -23,9 +23,13 @@ println(gold.bg())
 ```
 
 Indexed colors use `style.ansi256_fg(index)` and `style.ansi256_bg(index)`,
-producing `38;5;N` and `48;5;N`. The four basic attribute bits are
-`style.attr_bold`, `attr_italic`, `attr_underline` and `attr_reverse`; combine
-them with `|` in a `Style.attrs` value.
+producing `38;5;N` and `48;5;N`. The attribute bits are `style.attr_bold`,
+`attr_italic`, `attr_underline`, `attr_reverse`, `attr_faint`, `attr_blink`
+and `attr_strike`; combine them with `|` in a `Style.attrs` value.
+`Style.underline_style` selects single, double, curly, dotted or dashed
+underlines (SGR `4:x`), and `Style.underline_color` sets the underline color.
+`Style.link` wraps `apply` output in an OSC8 hyperlink (use `apply` directly;
+the cell renderer only parses SGR).
 
 The renderer adapts truecolor to the terminal. `termkit.detect_color_profile()`
 reads `NO_COLOR`, `COLORTERM` and `TERM` and returns a `ColorProfile` of
@@ -116,3 +120,19 @@ println(inside.contains(3, 1))
 
 `layout.Align` is also the type used by `Style.align`, so the two systems
 share the same `start` / `center` / `end` vocabulary.
+
+## Clamp, wrap, inherit and measure
+
+`Style.max_width` and `max_height` clamp block rendering, and `Style.inline`
+skips block layout so only inline SGR attributes apply. `style.wrap_text(text,
+width)` word-wraps to a visible width, carrying ANSI sequences along without
+counting them. `child.inherit(parent)` fills every unset field from the parent
+(empty strings, zero numbers and `.none` variants count as unset; attribute
+bits combine).
+
+`layout.place_full(outer, size, halign, valign)` places with independent
+horizontal and vertical alignment (`place` centers vertically).
+`layout.position(v)` clamps `v` into a proportional `[0, 1]` placement, and
+`pos.at(total, size)` resolves it to an offset; `layout.split_at(total, pos)`
+divides cells proportionally. `layout.block_width`, `block_height` and
+`block_size` measure text in visible cells and lines.

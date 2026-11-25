@@ -11,6 +11,22 @@ pub const attr_italic = u8(2)
 pub const attr_underline = u8(4)
 // attr_reverse marks text as reverse video.
 pub const attr_reverse = u8(8)
+// attr_faint marks text as faint.
+pub const attr_faint = u8(16)
+// attr_blink marks text as blinking.
+pub const attr_blink = u8(32)
+// attr_strike marks text as struck through.
+pub const attr_strike = u8(64)
+
+// UnderlineStyle selects the underline variant (SGR 4:x).
+pub enum UnderlineStyle {
+	none
+	single
+	double
+	curly
+	dotted
+	dashed
+}
 
 // BorderKind selects the characters used for a box border.
 pub enum BorderKind {
@@ -32,6 +48,23 @@ pub mut:
 	align   layout.Align = .start
 	width   int
 	title   string
+	// max_width clamps the rendered block to at most this many visible cells.
+	// Values <= 0 mean no clamp.
+	max_width int
+	// max_height truncates the rendered block to at most this many lines.
+	// Values <= 0 mean no clamp.
+	max_height int
+	// inline disables border, padding, margin and width so the style only
+	// contributes inline SGR attributes.
+	inline bool
+	// underline_style selects the underline variant. .none keeps attr_underline.
+	underline_style UnderlineStyle = .none
+	// underline_color is the SGR parameter for the underline color.
+	underline_color string
+	// link wraps rendered output in an OSC8 hyperlink when non-empty. The
+	// diffing renderer only parses SGR, so linked output is best used with
+	// Style.apply rather than the cell renderer.
+	link string
 }
 
 // sgr returns the SGR sequence that activates this style.
@@ -46,21 +79,56 @@ pub fn (s Style) sgr() string {
 	if s.attrs & attr_bold != 0 {
 		out += '\x1b[1m'
 	}
+	if s.attrs & attr_faint != 0 {
+		out += '\x1b[2m'
+	}
 	if s.attrs & attr_italic != 0 {
 		out += '\x1b[3m'
 	}
-	if s.attrs & attr_underline != 0 {
-		out += '\x1b[4m'
+	if s.attrs & attr_blink != 0 {
+		out += '\x1b[5m'
 	}
 	if s.attrs & attr_reverse != 0 {
 		out += '\x1b[7m'
 	}
+	if s.attrs & attr_strike != 0 {
+		out += '\x1b[9m'
+	}
+	match s.underline_style {
+		.single {
+			out += '\x1b[4:1m'
+		}
+		.double {
+			out += '\x1b[4:2m'
+		}
+		.curly {
+			out += '\x1b[4:3m'
+		}
+		.dotted {
+			out += '\x1b[4:4m'
+		}
+		.dashed {
+			out += '\x1b[4:5m'
+		}
+		else {}
+	}
+	if s.attrs & attr_underline != 0 && s.underline_style == .none {
+		out += '\x1b[4m'
+	}
+	if s.underline_color != '' {
+		out += '\x1b[58;${s.underline_color}m'
+	}
 	return out
 }
 
-// apply wraps text in this style and a trailing reset.
+// apply wraps text in this style and a trailing reset. When link is set, the
+// result is additionally wrapped in an OSC8 hyperlink.
 pub fn (s Style) apply(text string) string {
-	return s.sgr() + text + '\x1b[0m'
+	styled := s.sgr() + text + '\x1b[0m'
+	if s.link == '' {
+		return styled
+	}
+	return '\x1b]8;;${s.link}\x1b\\' + styled + '\x1b]8;;\x1b\\'
 }
 
 struct Glyphs {
@@ -114,9 +182,174 @@ fn truncate_width(s string, width int) string {
 	return out
 }
 
+// inherit returns a copy of s with every unset field taken from other.
+// Empty strings, zero numbers, .none variants and .start alignment count as
+// unset; attribute bits are combined.
+pub fn (s Style) inherit(other Style) Style {
+	mut out := s
+	if out.fg == '' {
+		out.fg = other.fg
+	}
+	if out.bg == '' {
+		out.bg = other.bg
+	}
+	if out.border == .none {
+		out.border = other.border
+	}
+	if out.padding == 0 {
+		out.padding = other.padding
+	}
+	if out.margin == 0 {
+		out.margin = other.margin
+	}
+	if out.align == .start {
+		out.align = other.align
+	}
+	if out.width == 0 {
+		out.width = other.width
+	}
+	if out.title == '' {
+		out.title = other.title
+	}
+	if out.max_width == 0 {
+		out.max_width = other.max_width
+	}
+	if out.max_height == 0 {
+		out.max_height = other.max_height
+	}
+	if out.underline_style == .none {
+		out.underline_style = other.underline_style
+	}
+	if out.underline_color == '' {
+		out.underline_color = other.underline_color
+	}
+	if out.link == '' {
+		out.link = other.link
+	}
+	out.attrs |= other.attrs
+	return out
+}
+
+// wrap_text wraps text to at most width visible cells per line, breaking on
+// spaces. ANSI escape sequences ride along with their word and never count
+// toward the width.
+pub fn wrap_text(text string, width int) string {
+	if width <= 0 {
+		return text
+	}
+	mut out := []string{}
+	for raw_line in text.split('\n') {
+		out << wrap_line(raw_line, width)
+	}
+	return out.join('\n')
+}
+
+fn wrap_line(line string, width int) []string {
+	mut lines := []string{}
+	mut cur := ''
+	mut cur_w := 0
+	for word in line.split(' ') {
+		w := term.printable_len(word)
+		if cur == '' {
+			if w <= width {
+				cur = word
+				cur_w = w
+				continue
+			}
+			for chunk in break_word(word, width) {
+				lines << chunk
+			}
+			continue
+		}
+		if cur_w + 1 + w <= width {
+			cur += ' ' + word
+			cur_w += 1 + w
+			continue
+		}
+		lines << cur
+		if w <= width {
+			cur = word
+			cur_w = w
+		} else {
+			cur = ''
+			cur_w = 0
+			for chunk in break_word(word, width) {
+				lines << chunk
+			}
+		}
+	}
+	if cur != '' {
+		lines << cur
+	}
+	if lines.len == 0 {
+		return ['']
+	}
+	return lines
+}
+
+// break_word hard-breaks an oversized word into width-sized printable chunks,
+// keeping ANSI escape sequences attached to their text.
+fn break_word(word string, width int) []string {
+	mut chunks := []string{}
+	mut cur := ''
+	mut cur_w := 0
+	runes := word.runes()
+	mut i := 0
+	for i < runes.len {
+		if runes[i].str() == '\x1b' && i + 1 < runes.len && runes[i + 1].str() == '[' {
+			mut j := i + 2
+			for j < runes.len {
+				c := runes[j].str()
+				if (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') {
+					j++
+					break
+				}
+				j++
+			}
+			for k in i .. j {
+				cur += runes[k].str()
+			}
+			i = j
+			continue
+		}
+		w := term.printable_len(runes[i].str())
+		if cur_w + w > width && cur_w > 0 {
+			chunks << cur
+			cur = ''
+			cur_w = 0
+		}
+		cur += runes[i].str()
+		cur_w += w
+		i++
+	}
+	if cur != '' {
+		chunks << cur
+	}
+	return chunks
+}
+
 // render lays out text with margin, padding, alignment and an optional
 // border. The returned string contains SGR codes the termkit renderer parses.
+// Inline styles skip block layout; max_width and max_height clamp the block.
 pub fn (s Style) render(text string) string {
+	if s.inline {
+		return s.apply(text)
+	}
+	mut styled := s
+	if styled.max_width > 0 && (styled.width <= 0 || styled.width > styled.max_width) {
+		styled.width = styled.max_width
+	}
+	mut body := text
+	if styled.max_height > 0 {
+		lines := body.split('\n')
+		if lines.len > styled.max_height {
+			body = lines[..styled.max_height].join('\n')
+		}
+	}
+	return styled.render_inner(body)
+}
+
+fn (s Style) render_inner(text string) string {
 	margin := if s.margin < 0 { 0 } else { s.margin }
 	if margin == 0 {
 		return s.render_block(text)
