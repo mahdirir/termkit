@@ -172,6 +172,27 @@ fn (mut p Program) handle(msg Msg) {
 			p.quitting = true
 			return
 		}
+		InterruptMsg {
+			// Interrupts reach the model (so it can e.g. confirm unsaved
+			// work) and still stop the program afterwards.
+			p.quitting = true
+		}
+		SuspendMsg {
+			p.suspend()
+			return
+		}
+		ResumeMsg {
+			p.resume()
+			return
+		}
+		ClearScreenMsg {
+			if !isnil(p.ui) {
+				p.ui.write('\x1b[2J\x1b[H')
+				p.ui.flush()
+			}
+			p.repaint()
+			return
+		}
 		TitleMsg {
 			if !isnil(p.ui) {
 				p.ui.set_window_title(msg.title)
@@ -244,6 +265,9 @@ fn (mut p Program) dispatch(cmd Cmd) {
 		}
 		EveryCmd {
 			p.schedule(cmd.id, cmd.delay, cmd.produce, true)
+		}
+		ExecCmd {
+			p.run_exec(cmd)
 		}
 	}
 }
@@ -400,6 +424,34 @@ pub fn (mut p Program) resume() {
 	p.ui.hide_cursor()
 	p.ui.flush()
 	p.repaint()
+}
+
+// release_terminal leaves the alternate screen and restores the terminal
+// cursor. It is the user-driven form of suspend for e.g. `$EDITOR`
+// invocations; restore_terminal re-enters the program.
+pub fn (mut p Program) release_terminal() {
+	p.suspend()
+}
+
+// restore_terminal re-enters the alternate screen after release_terminal.
+pub fn (mut p Program) restore_terminal() {
+	p.resume()
+}
+
+// run_exec suspends the terminal, runs the command synchronously, restores
+// the terminal and queues the result as an ExecDoneMsg.
+fn (mut p Program) run_exec(cmd ExecCmd) {
+	p.suspend()
+	mut argv := [cmd.path]
+	argv << cmd.args
+	res := os.exec(argv)
+	p.resume()
+	p.send(ExecDoneMsg{
+		id:        cmd.id
+		path:      cmd.path
+		exit_code: res.exit_code
+		output:    res.output
+	})
 }
 
 // is_repeat_report recognises a CSI-u key report with event type 3 (repeat).

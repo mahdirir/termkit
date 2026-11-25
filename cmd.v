@@ -44,9 +44,18 @@ pub:
 	produce fn (i64) Msg = unsafe { nil }
 }
 
+// ExecCmd runs a subprocess while the terminal is suspended, then delivers
+// an ExecDoneMsg. Arguments are passed directly without a shell.
+pub struct ExecCmd {
+pub:
+	id   int
+	path string
+	args []string
+}
+
 // Cmd is a request for side effects from an update. It is a sum type rather
 // than a bare function so that messages and timers remain ordinary values.
-pub type Cmd = NoCmd | MsgCmd | CmdFn | BatchCmd | SequenceCmd | TickCmd | EveryCmd
+pub type Cmd = NoCmd | MsgCmd | CmdFn | BatchCmd | SequenceCmd | TickCmd | EveryCmd | ExecCmd
 
 // no_cmd is the command that does nothing.
 pub const no_cmd = Cmd(NoCmd{})
@@ -100,6 +109,35 @@ pub fn quit() Cmd {
 	return msg_cmd(QuitMsg{})
 }
 
+// suspend asks the runtime to leave the alternate screen and restore the
+// terminal.
+pub fn suspend() Cmd {
+	return msg_cmd(SuspendMsg{})
+}
+
+// resume asks the runtime to re-enter the alternate screen and repaint.
+pub fn resume() Cmd {
+	return msg_cmd(ResumeMsg{})
+}
+
+// interrupt asks the runtime to stop the program as an interrupt (Ctrl-C).
+// It is distinct from quit so models can tell the two apart.
+pub fn interrupt() Cmd {
+	return msg_cmd(InterruptMsg{})
+}
+
+// clear_screen asks the runtime to clear the screen and repaint the frame.
+pub fn clear_screen() Cmd {
+	return msg_cmd(ClearScreenMsg{})
+}
+
+// exec_cmd runs path with args while the terminal is suspended, then
+// delivers an ExecDoneMsg with id. The command runs synchronously inside the
+// frame loop, like an interactive `$EDITOR` invocation.
+pub fn exec_cmd(id int, path string, args []string) Cmd {
+	return Cmd(ExecCmd{ id: id, path: path, args: args })
+}
+
 // set_window_title asks the runtime to change the terminal title.
 pub fn set_window_title(title string) Cmd {
 	return msg_cmd(TitleMsg{ title: title })
@@ -151,5 +189,6 @@ fn collect_delivered_msgs(cmd Cmd, mut out []Msg, depth int) {
 		}
 		TickCmd {}
 		EveryCmd {}
+		ExecCmd {}
 	}
 }

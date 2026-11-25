@@ -152,7 +152,32 @@ normal `quit()` and on a shutdown signal; on a normal quit the runtime also
 emits the reset, cursor-show and alternate-screen-leave sequences. `cancel`
 and `ctx` offer an additional per-frame way to stop. `Program.suspend()`,
 `resume()` and `repaint()` are available for external editors or screen
-changes.
+changes. The same operations exist as commands — `suspend()`, `resume()`,
+`clear_screen()` — plus `release_terminal()` / `restore_terminal()` as the
+user-driven pair.
+
+## Interrupts and subprocesses
+
+`quit()` stops silently; `interrupt()` stops as an interrupt and is also
+delivered to the model, so it can react (for example by saving state) before
+exit. `exec_cmd(id, path, args)` suspends the terminal, runs a subprocess
+synchronously without a shell, restores the terminal and delivers an
+`ExecDoneMsg` with the exit code and output:
+
+```v ignore
+fn (mut m Model) update(msg termkit.Msg) (termkit.Model, termkit.Cmd) {
+	match msg {
+		termkit.ExecDoneMsg {
+			m.last_output = msg.output
+		}
+		else {}
+	}
+	return m, termkit.no_cmd
+}
+
+// elsewhere, e.g. on a key press:
+return m, termkit.exec_cmd(1, 'git', ['status'])
+```
 
 ## Paste, focus and repeat
 

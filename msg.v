@@ -152,3 +152,27 @@ pub:
 // NoopMsg is produced for input the runtime does not translate. Models can
 // safely ignore it.
 pub struct NoopMsg {}
+
+// SuspendMsg asks the runtime to leave the alternate screen and restore the
+// terminal, for example before running an interactive subprocess.
+pub struct SuspendMsg {}
+
+// ResumeMsg asks the runtime to re-enter the alternate screen and repaint.
+pub struct ResumeMsg {}
+
+// InterruptMsg is a quit request for interrupts (Ctrl-C / SIGINT). It is
+// distinct from QuitMsg so models can confirm unsaved work on interrupt
+// while quitting silently on QuitMsg.
+pub struct InterruptMsg {}
+
+// ClearScreenMsg asks the runtime to clear the screen and repaint the frame.
+pub struct ClearScreenMsg {}
+
+// ExecDoneMsg carries the result of an exec_cmd subprocess.
+pub struct ExecDoneMsg {
+pub:
+	id        int
+	path      string
+	exit_code int
+	output    string
+}

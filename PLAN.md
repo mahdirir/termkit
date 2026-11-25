@@ -168,11 +168,12 @@ termkit/
 
 ### M7 — Subprocess + TTY control (future)
 
-- [ ] `Exec`-style blocking subprocess: release TTY, run command, restore + resume.
-- [ ] `ReleaseTerminal` / `RestoreTerminal` public API for user-driven pauses.
-- [ ] Suspend/resume (`SuspendMsg`/`ResumeMsg`, SIGTSTP/SIGCONT handling).
-- [ ] Interrupt/quit split (`SIGINT→InterruptMsg` vs `SIGTERM→QuitMsg`).
-- [ ] `ClearScreen` command (cursor-home + clear without alt-screen).
+- [x] `Exec`-style blocking subprocess: suspend TTY, run command, restore + resume.
+- [x] `ReleaseTerminal` / `RestoreTerminal` public API for user-driven pauses.
+- [x] Suspend/resume (`SuspendMsg`/`ResumeMsg` + methods; OS-signal wiring
+      stays with term.ui, which owns the signal handlers).
+- [x] Interrupt/quit split (`InterruptMsg` reaches the model, then quits).
+- [x] `ClearScreen` command (cursor-home + clear without alt-screen).
 
 ### M8 — Key bindings + help foundation (future)
 
