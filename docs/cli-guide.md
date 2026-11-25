@@ -129,7 +129,27 @@ Mistyped subcommands and flags produce a `did you mean \`x\`?` hint based on
 Levenshtein edit distance. The public helpers are `cli.levenshtein(a, b)`,
 `cli.suggest(input, candidates)` and `cli.suggest_command(input, commands)`.
 A hint is only returned for a close match (distance at most 2 and shorter than
-the input).
+the input). Per-command tuning is available: `suggest_for` adds extra alias
+names that suggest a command, and `suggest_min_distance` overrides the
+threshold for that command's subcommands (`cmd.suggest_subcommand(input)`).
+
+## Dynamic completion and hints
+
+Static completions cover subcommands, `choices` lists and flag names.
+`complete_fn` on a command adds dynamic items for the current context, and
+`complete_fn` on a flag adds dynamic values when completing that flag's
+value. Items carry an optional directive (`no_space`, `keep_order`, file
+filters) for custom `__complete` consumers. Items with `hint: true` are
+ActiveHelp-style annotation lines: they are shown but never completed.
+
+```v ignore
+cmd.complete_fn = fn (c cli.Command, words []string) []cli.CompletionItem {
+	return [cli.CompletionItem{ value: 'staging', description: 'deploy target' }]
+}
+```
+
+Flags marked `required: true` are annotated `(required)` in completion output,
+and `one_required` groups require exactly one of the listed flags.
 
 ## Completion protocol
 

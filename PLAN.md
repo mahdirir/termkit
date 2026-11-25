@@ -182,14 +182,14 @@ termkit/
 - [x] Elastic help: width-aware truncation with ellipsis, multi-column
       full-help view, auto-hide disabled bindings.
 
-### M9 — Dynamic completion (future)
+### M9 — Dynamic completion (done)
 
-- [ ] Per-arg dynamic completion + per-flag completion funcs returning
+- [x] Per-arg dynamic completion + per-flag completion funcs returning
       (values, directive).
-- [ ] Completion directives + file semantics (`NoSpace`/`KeepOrder`/extension
+- [x] Completion directives + file semantics (`no_space`/`keep_order`/extension
       and directory filters, filename/dirname marking).
-- [ ] `ActiveHelp` annotation lines shown during completion.
-- [ ] Required-flag UX: exactly-one-required combination, surface required
+- [x] ActiveHelp-style annotation lines shown during completion.
+- [x] Required-flag UX: exactly-one-required combination, surface required
       flags in completion output.
 
 ### M10 — Layout correctness (future)

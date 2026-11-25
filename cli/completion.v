@@ -1,7 +1,39 @@
 module cli
 
+// CompletionDirective controls how a shell treats a completion item.
+// Built-in scripts pass value and description through; custom consumers of
+// the `__complete` protocol can honor the directive.
+pub enum CompletionDirective {
+	none
+	no_space
+	no_file_comp
+	filter_ext
+	filter_dirs
+	keep_order
+}
+
+// CompletionItem is one dynamic completion result.
+pub struct CompletionItem {
+pub:
+	value       string
+	description string
+	// hint marks ActiveHelp-style annotation lines. They are shown by
+	// consumers but never completed; lines are emitted with a `:` prefix.
+	hint      bool
+	directive CompletionDirective = .none
+}
+
+// line renders the item in `value<TAB>description` protocol form.
+pub fn (item CompletionItem) line() string {
+	if item.hint {
+		return ':${item.value}\t${item.description}'
+	}
+	return '${item.value}\t${item.description}'
+}
+
 // completion_result implements the dynamic `__complete` protocol. Each line is
-// `value<TAB>description`, a format all supported shells can consume.
+// `value<TAB>description`, a format all supported shells can consume. Hint
+// items use a `:` prefix and are display-only.
 pub fn completion_result(c &Command, args []string) string {
 	last := if args.len > 0 { args[args.len - 1] } else { '' }
 	remaining := if args.len > 1 { args[..args.len - 1] } else { []string{} }
@@ -14,6 +46,11 @@ fn completion_for(c &Command, remaining []string, last string) []string {
 		if idx >= 0 {
 			return completion_for(&c.commands[idx], remaining[1..], last)
 		}
+		// A value-taking flag consumes the next word: complete its values.
+		flag_name, is_value_pos := flag_value_position(c, remaining)
+		if is_value_pos {
+			return complete_flag_values(c, flag_name, last)
+		}
 	}
 	mut out := []string{}
 	if last.starts_with('-') {
@@ -22,17 +59,83 @@ fn completion_for(c &Command, remaining []string, last string) []string {
 				continue
 			}
 			if '--${f.name}'.starts_with(last) {
-				out << '--${f.name}\t${f.description}'
+				out << flag_completion_line(f)
 			}
 		}
-		return out
+	} else {
+		for sub in c.commands {
+			if !sub.hidden && sub.name.starts_with(last) {
+				out << '${sub.name}\t${sub.description}'
+			}
+		}
 	}
-	for sub in c.commands {
-		if !sub.hidden && sub.name.starts_with(last) {
-			out << '${sub.name}\t${sub.description}'
+	out << dynamic_completion_lines(c, remaining, last)
+	return out
+}
+
+// flag_value_position reports whether the word being completed is the value
+// of a value-taking flag named in remaining.
+fn flag_value_position(c &Command, remaining []string) (string, bool) {
+	if remaining.len == 0 {
+		return '', false
+	}
+	prev := remaining[remaining.len - 1]
+	if !prev.starts_with('--') || prev.contains('=') {
+		return '', false
+	}
+	name := prev[2..]
+	for f in c.all_flags {
+		if f.name == name && f.flag != .bool {
+			return name, true
+		}
+	}
+	return '', false
+}
+
+// complete_flag_values completes static choices and dynamic items for the
+// value of flag name.
+fn complete_flag_values(c &Command, name string, last string) []string {
+	mut out := []string{}
+	for f in c.all_flags {
+		if f.name != name {
+			continue
+		}
+		for choice in f.choices {
+			if choice.starts_with(last) {
+				out << '${choice}\t'
+			}
+		}
+		if complete := f.complete_fn {
+			for item in complete(*c, f) {
+				if item.value.starts_with(last) {
+					out << item.line()
+				}
+			}
 		}
 	}
 	return out
+}
+
+// dynamic_completion_lines runs the command's complete_fn and filters items
+// by the current prefix.
+fn dynamic_completion_lines(c &Command, remaining []string, last string) []string {
+	mut out := []string{}
+	if complete := c.complete_fn {
+		mut words := remaining.clone()
+		words << last
+		for item in complete(*c, words) {
+			if item.hint || item.value.starts_with(last.trim_left('-')) {
+				out << item.line()
+			}
+		}
+	}
+	return out
+}
+
+// flag_completion_line renders a flag, marking required flags.
+fn flag_completion_line(f Flag) string {
+	desc := if f.required { '${f.description} (required)' } else { f.description }
+	return '--${f.name}\t${desc}'
 }
 
 // completion_script returns a shell completion script for name. Shell

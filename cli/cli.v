@@ -30,6 +30,8 @@ pub mut:
 	negatable bool
 	// validate transforms or rejects a value supplied for this flag.
 	validate ?fn (string) !string
+	// complete_fn provides dynamic completions for this flag's values.
+	complete_fn ?fn (Command, Flag) []CompletionItem
 mut:
 	found bool
 	value []string
@@ -226,9 +228,20 @@ pub mut:
 	mutually_exclusive [][]string
 	// required_together lists groups where supplying one requires all.
 	required_together [][]string
-	before            Hook = unsafe { nil }
-	execute_fn        Hook = unsafe { nil }
-	after             Hook = unsafe { nil }
+	// one_required lists groups where exactly one flag must be supplied.
+	one_required [][]string
+	// suggest_for lists extra names that suggest this command on typos.
+	suggest_for []string
+	// suggest_min_distance overrides the typo suggestion threshold for this
+	// command's subcommands. Values <= 0 use the default of 2.
+	suggest_min_distance int
+	// complete_fn provides dynamic completions for the current context. It
+	// receives the command and the words so far, and runs after the static
+	// subcommand and flag matches.
+	complete_fn ?fn (Command, []string) []CompletionItem
+	before      Hook = unsafe { nil }
+	execute_fn  Hook = unsafe { nil }
+	after       Hook = unsafe { nil }
 	// persistent_before runs before before hooks for this command and every
 	// descendant, from the root command down to the executed one.
 	persistent_before Hook = unsafe { nil }
@@ -357,7 +370,7 @@ fn (mut c Command) dispatch(mut args []string) ! {
 			return
 		}
 		if c.commands.len > 0 && isnil(c.execute_fn) && isnil(c.execute_with_fn) {
-			hint := suggest_command(token, c.commands)
+			hint := c.suggest_subcommand(token)
 			msg := 'unknown command `${token}` for `${c.full_name()}`'
 			return error(if hint == '' { msg } else { '${msg}. ${hint}' })
 		}
@@ -531,6 +544,17 @@ fn (mut c Command) finish() ! {
 					return error('flag `${name}` is required together with ${group.join(', ')}')
 				}
 			}
+		}
+	}
+	for group in c.one_required {
+		mut count := 0
+		for name in group {
+			if c.flag_found(name) {
+				count++
+			}
+		}
+		if count != 1 {
+			return error('exactly one of ${group.join(', ')} is required by `${c.full_name()}`')
 		}
 	}
 	match c.args_rule {
