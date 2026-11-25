@@ -1,7 +1,11 @@
 module cli
 
-// help_message returns the generated help text for a command.
+// help_message returns the generated help text for a command. A custom
+// help_fn overrides the default rendering when set.
 pub fn (c &Command) help_message() string {
+	if f := c.help_fn {
+		return f(c)
+	}
 	mut lines := []string{}
 	mut title := c.full_name()
 	if c.description != '' {

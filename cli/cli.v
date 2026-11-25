@@ -11,6 +11,7 @@ pub enum FlagType {
 	int_array
 	float_array
 	string_array
+	count
 }
 
 // Flag describes a command line option.
@@ -30,11 +31,17 @@ pub mut:
 	negatable bool
 	// validate transforms or rejects a value supplied for this flag.
 	validate ?fn (string) !string
+	// no_opt_default supplies the value when a value-taking flag is given
+	// without one (`--level` instead of `--level 3`). Empty means the value
+	// is required.
+	no_opt_default string
 	// complete_fn provides dynamic completions for this flag's values.
 	complete_fn ?fn (Command, Flag) []CompletionItem
 mut:
 	found bool
 	value []string
+	// count records how many times a count flag was supplied.
+	count int
 }
 
 // found reports whether the flag was supplied on the command line.
@@ -120,6 +127,14 @@ pub fn (f &Flag) get_strings() ![]string {
 	return f.get_value_or_default()
 }
 
+// get_count returns how many times a count flag was supplied.
+pub fn (f &Flag) get_count() !int {
+	if f.flag != .count {
+		return error('${f.name}: expected count flag')
+	}
+	return f.count
+}
+
 // get_value_or_default returns the supplied values, or the defaults when the
 // flag was not present on the command line.
 pub fn (f &Flag) get_value_or_default() []string {
@@ -149,24 +164,35 @@ fn (f &Flag) matches(token string) bool {
 }
 
 fn (mut f Flag) set_value(token string, next string) !int {
+	if f.flag == .count {
+		f.count++
+		f.found = true
+		return 0
+	}
 	if f.flag == .bool {
 		if token.starts_with('--no-') {
 			f.value = ['false']
 		} else if token.contains('=') {
-			f.value = [token.split('=')[1]]
+			f.value = [token[token.index('=') or { 0 } + 1..]]
 		} else {
 			f.value = ['true']
 		}
 		return 0
 	}
 	mut val := ''
+	mut consumed := 0
 	if token.contains('=') {
-		val = token.split('=')[1]
+		val = token[token.index('=') or { 0 } + 1..]
+	} else if f.no_opt_default != '' && (next == '' || next.starts_with('-')) {
+		// Optional value absent: a leading dash starts the next flag, so a
+		// value starting with - needs the --flag=value form.
+		val = f.no_opt_default
 	} else {
 		if next == '' {
 			return error('missing value for flag `${f.name}`')
 		}
 		val = next
+		consumed = 1
 	}
 	if f.choices.len > 0 && val !in f.choices {
 		return error('invalid value `${val}` for flag `${f.name}`')
@@ -175,7 +201,7 @@ fn (mut f Flag) set_value(token string, next string) !int {
 		val = validator(val) or { return error('invalid value for flag `${f.name}`: ${err}') }
 	}
 	f.value << val
-	return if token.contains('=') { 0 } else { 1 }
+	return consumed
 }
 
 // get returns the flag with the given name or abbreviation.
@@ -224,6 +250,22 @@ pub mut:
 	silence_usage bool
 	// silence_errors suppresses error text; errors are still returned.
 	silence_errors bool
+	// traverse_children lets subcommands accept this command's local flags.
+	traverse_children bool
+	// disable_flag_parsing treats flag-like tokens as positional arguments.
+	// Subcommand dispatch still works.
+	disable_flag_parsing bool
+	// interspersed allows flags after positional arguments. When false, the
+	// first positional argument ends flag parsing.
+	interspersed bool = true
+	// normalize_fn maps a long flag name before lookup, e.g. dashes to
+	// underscores. Nil disables normalization.
+	normalize_fn ?fn (string) string
+	// help_fn overrides help_message when set.
+	help_fn ?fn (&Command) string
+	// version_template renders --version output. {{name}} and {{version}}
+	// are substituted; empty uses the default `name version x.y` line.
+	version_template string
 	// mutually_exclusive lists groups of flag names that cannot be combined.
 	mutually_exclusive [][]string
 	// required_together lists groups where supplying one requires all.
@@ -254,6 +296,11 @@ pub mut:
 	before_with_fn  HookWithCommand = unsafe { nil }
 	execute_with_fn HookWithCommand = unsafe { nil }
 	after_with_fn   HookWithCommand = unsafe { nil }
+	// persistent_before_with_fn and persistent_after_with_fn are the
+	// command-aware forms of the persistent hooks. They run in the same
+	// positions: root-to-leaf around before, leaf-to-root around after.
+	persistent_before_with_fn HookWithCommand = unsafe { nil }
+	persistent_after_with_fn  HookWithCommand = unsafe { nil }
 	// out and err_out capture generated output in tests. When absent, output
 	// goes to the process streams.
 	out     ?fn (string)
@@ -312,7 +359,11 @@ pub fn (mut c Command) setup() {
 	}
 	for i in 0 .. c.commands.len {
 		c.commands[i].parent = &c
-		c.commands[i].inherited = c.all_flags.filter(it.global)
+		if c.traverse_children {
+			c.commands[i].inherited = c.all_flags.clone()
+		} else {
+			c.commands[i].inherited = c.all_flags.filter(it.global)
+		}
 		c.commands[i].setup()
 	}
 }
@@ -348,6 +399,7 @@ pub fn (mut c Command) run(args []string) ! {
 fn (mut c Command) dispatch(mut args []string) ! {
 	mut i := 0
 	mut end_flags := false
+	mut end_positional := false
 	for i < args.len {
 		token := args[i]
 		if !end_flags && token == '--' {
@@ -355,7 +407,8 @@ fn (mut c Command) dispatch(mut args []string) ! {
 			i++
 			continue
 		}
-		if !end_flags && token.len > 1 && token.starts_with('-') && token != '-' {
+		if !end_flags && !end_positional && !c.disable_flag_parsing && token.len > 1
+			&& token.starts_with('-') && token != '-' {
 			if token.starts_with('--') {
 				i += c.parse_long(token, args, i)!
 			} else {
@@ -363,7 +416,7 @@ fn (mut c Command) dispatch(mut args []string) ! {
 			}
 			continue
 		}
-		idx := if end_flags { -1 } else { c.find_sub(token) }
+		idx := if end_flags || end_positional { -1 } else { c.find_sub(token) }
 		if idx >= 0 {
 			mut sub := c.commands[idx]
 			sub.dispatch(mut args[i + 1..])!
@@ -375,6 +428,9 @@ fn (mut c Command) dispatch(mut args []string) ! {
 			return error(if hint == '' { msg } else { '${msg}. ${hint}' })
 		}
 		c.args << token
+		if !c.interspersed {
+			end_positional = true
+		}
 		i++
 	}
 	c.finish()!
@@ -383,17 +439,26 @@ fn (mut c Command) dispatch(mut args []string) ! {
 fn (mut c Command) parse_long(token string, args []string, pos int) !int {
 	name_part := token[2..]
 	name := if name_part.contains('=') { name_part.split('=')[0] } else { name_part }
-	lookup := if name.starts_with('no-') { name[3..] } else { name }
+	mut canonical := token
+	mut lookup_name := name
+	if norm := c.normalize_fn {
+		normalized := norm(name)
+		if normalized != name {
+			canonical = '--' + normalized + token[name.len + 2..]
+			lookup_name = normalized
+		}
+	}
+	lookup := if lookup_name.starts_with('no-') { lookup_name[3..] } else { lookup_name }
 	for i in 0 .. c.all_flags.len {
 		mut f := &c.all_flags[i]
 		if f.name != lookup {
 			continue
 		}
-		if !f.matches(token) {
+		if !f.matches(canonical) {
 			continue
 		}
 		next := if pos + 1 < args.len { args[pos + 1] } else { '' }
-		consumed := f.set_value(token, next)!
+		consumed := f.set_value(canonical, next)!
 		f.found = true
 		if f.deprecated != '' && !c.silence_errors {
 			c.write_err('flag `${f.name}` is deprecated: ${f.deprecated}\n')
@@ -420,7 +485,7 @@ fn (mut c Command) parse_short(token string, args []string, pos int) !int {
 			if idx < 0 {
 				return error('unknown flag `-${ch.ascii_str()}` for `${c.full_name()}`')
 			}
-			if c.all_flags[idx].flag == .bool {
+			if c.all_flags[idx].flag == .bool || c.all_flags[idx].flag == .count {
 				c.apply_short(ch, '', []string{}, 0)!
 				continue
 			}
@@ -506,13 +571,51 @@ fn (c &Command) persistent_after_hooks() []Hook {
 	return out
 }
 
+// persistent_before_with_hooks returns the command-aware persistent before
+// hooks from the root ancestor down to this command.
+fn (c &Command) persistent_before_with_hooks() []HookWithCommand {
+	mut chain := []&Command{}
+	mut node := c.parent
+	for !isnil(node) {
+		chain << node
+		node = node.parent
+	}
+	mut out := []HookWithCommand{}
+	for i := chain.len - 1; i >= 0; i-- {
+		if !isnil(chain[i].persistent_before_with_fn) {
+			out << chain[i].persistent_before_with_fn
+		}
+	}
+	if !isnil(c.persistent_before_with_fn) {
+		out << c.persistent_before_with_fn
+	}
+	return out
+}
+
+// persistent_after_with_hooks returns the command-aware persistent after
+// hooks from this command up to the root ancestor.
+fn (c &Command) persistent_after_with_hooks() []HookWithCommand {
+	mut out := []HookWithCommand{}
+	if !isnil(c.persistent_after_with_fn) {
+		out << c.persistent_after_with_fn
+	}
+	mut node := c.parent
+	for !isnil(node) {
+		if !isnil(node.persistent_after_with_fn) {
+			out << node.persistent_after_with_fn
+		}
+		node = node.parent
+	}
+	return out
+}
+
 fn (mut c Command) finish() ! {
 	if c.show_help {
 		c.write_out(c.help_message())
 		return
 	}
 	if c.show_version {
-		c.write_out('${c.name} version ${c.version}\n')
+		c.write_out(c.version_line())
 		return
 	}
 	for f in c.all_flags {
@@ -583,6 +686,9 @@ fn (mut c Command) finish() ! {
 	for hook in c.persistent_before_hooks() {
 		hook()!
 	}
+	for hook in c.persistent_before_with_hooks() {
+		hook(*c)!
+	}
 	if !isnil(c.before_with_fn) {
 		c.before_with_fn(*c)!
 	} else if !isnil(c.before) {
@@ -607,9 +713,22 @@ fn (mut c Command) finish() ! {
 	} else if !isnil(c.after) {
 		c.after()!
 	}
+	for hook in c.persistent_after_with_hooks() {
+		hook(*c)!
+	}
 	for hook in c.persistent_after_hooks() {
 		hook()!
 	}
+}
+
+// version_line renders the --version output using version_template when set.
+// {{name}} and {{version}} are substituted.
+pub fn (c &Command) version_line() string {
+	if c.version_template == '' {
+		return '${c.name} version ${c.version}\n'
+	}
+	return c.version_template.replace('{{name}}', c.name).replace('{{version}}',
+		c.version) + '\n'
 }
 
 fn (c &Command) flag_found(name string) bool {

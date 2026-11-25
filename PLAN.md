@@ -219,14 +219,15 @@ termkit/
       tick IDs; paginator dots style + custom arabic format (spring physics
       and per-level style funcs out of scope).
 
-### M12 — CLI robustness (future)
+### M12 — CLI robustness (done)
 
-- [ ] Errorable pre/post hooks aborting before validation.
-- [ ] Optional-value flags + counter flags (`-vvv`); flag-name normalization.
-- [ ] Child-traversing parent-local parsing; unknown-flag passthrough and
-      non-parsing modes for wrapper commands.
-- [ ] YAML/Markdown/reST doc generators (man pages already exist).
-- [ ] Overridable help/usage/version templates; suggestion tuning
+- [x] Errorable command-aware pre/post hooks in persistent positions.
+- [x] Optional-value flags + counter flags (`-vvv`); flag-name normalization.
+- [x] Child-traversing parent-local parsing; unknown-flag passthrough and
+      non-parsing/non-interspersed modes for wrapper commands.
+- [x] YAML/Markdown doc generators (man pages already existed; reST left
+      out as low value).
+- [x] Overridable help func and version template; suggestion tuning
       (aliases, minimum-distance threshold); config-file convention docs.
 
 ### M13 — Color + canvas (future)

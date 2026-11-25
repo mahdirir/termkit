@@ -151,6 +151,30 @@ cmd.complete_fn = fn (c cli.Command, words []string) []cli.CompletionItem {
 Flags marked `required: true` are annotated `(required)` in completion output,
 and `one_required` groups require exactly one of the listed flags.
 
+## Parsing control, hooks and generated docs
+
+- Command-aware persistent hooks run around the plain hooks:
+  `persistent_before_with_fn` (root down to the executed command) and
+  `persistent_after_with_fn` (back up). Returning an error aborts the run.
+- `FlagType.count` counts occurrences (`-vvv` is 3, read with
+  `get_count()`); count flags take no value.
+- `no_opt_default` on a flag supplies the value when none is given
+  (`--level` means `--level 1`). A value starting with `-` needs the
+  `--flag=value` form.
+- `normalize_fn` maps long flag names before lookup, e.g. dashes to
+  underscores so `--log-level` fills a `log_level` flag.
+- `traverse_children: true` lets subcommands accept the parent's local flags.
+  `disable_flag_parsing: true` passes flag-like tokens through as positional
+  arguments (subcommands still dispatch). With `interspersed: false`, the
+  first positional argument ends flag parsing.
+- `cmd.markdown()` and `cmd.to_yaml()` render the command tree; `cmd.manpage()`
+  already covers mdoc. `help_fn` overrides help rendering and
+  `version_template` (`{{name}}`/`{{version}}`) overrides `--version` output.
+
+Configuration files need no dependency: read env or a file in `init_fn` or a
+persistent before-hook and fill flag values with `get_flag`/`default_value`
+before validation runs.
+
 ## Completion protocol
 
 `run` recognises a first argument of `__complete`. It prints completion lines
