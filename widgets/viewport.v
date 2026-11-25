@@ -12,6 +12,11 @@ pub mut:
 	// offset_x/offset_y locate the viewport on screen for mouse hit-testing.
 	offset_x int
 	offset_y int
+	// gutter shows line numbers when true.
+	gutter bool
+mut:
+	last_find string
+	find_pos  int = -1
 }
 
 // set_content replaces the content and keeps the offset in range.
@@ -35,6 +40,40 @@ fn (mut v Viewport) clamp() {
 // line_count returns the total number of content lines.
 pub fn (v Viewport) line_count() int {
 	return v.lines.len
+}
+
+// scroll_percent returns how far the viewport has scrolled from 0 to 100.
+pub fn (v Viewport) scroll_percent() int {
+	max_offset := v.lines.len - v.height
+	if max_offset <= 0 {
+		return 100
+	}
+	return v.offset * 100 / max_offset
+}
+
+// find jumps to the first line containing query and returns true.
+pub fn (mut v Viewport) find(query string) bool {
+	v.last_find = query
+	v.find_pos = -1
+	return v.find_next()
+}
+
+// find_next jumps to the next line containing the last find query,
+// wrapping around. It returns false when nothing matches.
+pub fn (mut v Viewport) find_next() bool {
+	if v.last_find == '' || v.lines.len == 0 {
+		return false
+	}
+	for n in 1 .. v.lines.len + 1 {
+		i := (v.find_pos + n) % v.lines.len
+		if v.lines[i].contains(v.last_find) {
+			v.find_pos = i
+			v.offset = i
+			v.clamp()
+			return true
+		}
+	}
+	return false
 }
 
 // update handles scrolling keys.
@@ -103,9 +142,14 @@ pub fn (v Viewport) view() string {
 	if end > v.lines.len {
 		end = v.lines.len
 	}
+	gutter_width := if v.gutter { '${v.lines.len}'.len + 1 } else { 0 }
 	for i in v.offset .. end {
 		line := v.lines[i]
-		out << if v.width > 0 { pad(truncate(line, v.width), v.width) } else { line }
+		mut shown := if v.width > 0 { pad(truncate(line, v.width), v.width) } else { line }
+		if v.gutter {
+			shown = pad('${i + 1}', gutter_width) + shown
+		}
+		out << shown
 	}
 	return out.join('\n')
 }

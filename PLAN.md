@@ -202,20 +202,22 @@ termkit/
       bits, hyperlink wraps.
 - [x] Geometry helpers (`block_width`/`block_height`/`block_size`).
 
-### M11 — Widget upgrades (future)
+### M11 — Widget upgrades (done, scoped)
 
-- [ ] Table: per-cell style func + scroll viewport.
-- [ ] List: pluggable fuzzy filter func, match highlighting, timed status
-      messages, embedded spinner, rich item delegates, infinite scroll.
-- [ ] Viewport: search (highlight next/previous/ensure-visible), line-number
-      gutter, per-line styling, `ScrollPercent`, alt-screen position mode.
-- [ ] Text input: suggestion cycling, validation func, echo character,
-      masked-aware word delete, paste command.
-- [ ] File picker: permissions + humanized size columns, symlink target
-      resolution, allowed-types filtering, auto height.
-- [ ] Progress: multi-color gradient, static vs animated view, spring options,
-      half-block hi-res. Spinner preset catalog. Tree per-level style funcs,
-      custom enumerators/indenters, scroll offset. Multi-timer-safe tick IDs.
+- [x] Table: per-cell style func + header style (viewport already existed).
+- [x] List: custom filter func, match highlighting, status footer, cyclic
+      navigation (timed messages, embedded spinner and rich delegates left
+      out as low value).
+- [x] Viewport: find/find_next search, line-number gutter, `scroll_percent`
+      (per-line styling left to cell styles).
+- [x] Text input: validation func + error display, suggestions + complete()
+      (mask already covered echo character).
+- [x] File picker: permissions + humanized size columns, symlink marking,
+      allowed-types filtering, auto height.
+- [x] Progress: multi-color gradient + static `view_at`; spinner preset
+      catalog; tree custom markers/indent/height window; multi-timer-safe
+      tick IDs; paginator dots style + custom arabic format (spring physics
+      and per-level style funcs out of scope).
 
 ### M12 — CLI robustness (future)
 

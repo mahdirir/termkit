@@ -9,6 +9,8 @@ pub mut:
 	running bool
 	elapsed time.Duration
 	last_at i64
+	// id restricts updates to ticks with the same id. Zero accepts all.
+	id int
 }
 
 // start begins counting. The next tick establishes a fresh baseline so time
@@ -36,6 +38,9 @@ pub fn (mut s Stopwatch) update(msg termkit.Msg) {
 			if !s.running {
 				return
 			}
+			if s.id != 0 && msg.id != s.id {
+				return
+			}
 			if s.last_at != 0 {
 				delta := msg.at - s.last_at
 				if delta > 0 {
@@ -60,6 +65,8 @@ pub mut:
 	remaining time.Duration
 	last_at   i64
 	running   bool
+	// id restricts updates to ticks with the same id. Zero accepts all.
+	id int
 }
 
 // new_timer creates a stopped timer for d.
@@ -89,6 +96,9 @@ pub fn (mut t Timer) update(msg termkit.Msg) {
 	match msg {
 		termkit.TickMsg {
 			if !t.running || t.done() {
+				return
+			}
+			if t.id != 0 && msg.id != t.id {
 				return
 			}
 			if t.last_at != 0 {

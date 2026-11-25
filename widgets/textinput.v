@@ -11,6 +11,61 @@ pub mut:
 	// mask, when non-zero, replaces each character in the rendered value.
 	mask    u8
 	focused bool = true
+	// err holds the last validation error. It is shown after the value and
+	// cleared by successful validation.
+	err string
+	// validate rejects or transforms the value after every edit. A nil
+	// validator accepts everything.
+	validate ?fn (string) !string
+	// suggestions are offered completions for the current value.
+	suggestions []string
+}
+
+// validation_error returns the last validation error, if any.
+pub fn (t TextInput) validation_error() string {
+	return t.err
+}
+
+// is_valid reports whether the current value passes validation.
+pub fn (t TextInput) is_valid() bool {
+	return t.err == ''
+}
+
+// suggest returns the suggestions that start with the current value.
+pub fn (t TextInput) suggest() []string {
+	mut out := []string{}
+	for s in t.suggestions {
+		if s.starts_with(t.value) && s != t.value {
+			out << s
+		}
+	}
+	return out
+}
+
+// complete replaces the value with the first matching suggestion and
+// returns true.
+pub fn (mut t TextInput) complete() bool {
+	matches := t.suggest()
+	if matches.len == 0 {
+		return false
+	}
+	t.value = matches[0]
+	t.position = rune_len(t.value)
+	t.revalidate()
+	return true
+}
+
+// revalidate runs the validator against the current value.
+fn (mut t TextInput) revalidate() {
+	if validator := t.validate {
+		t.value = validator(t.value) or {
+			t.err = err.msg()
+			return
+		}
+		t.err = ''
+		return
+	}
+	t.err = ''
 }
 
 // focus marks the input as accepting keys.
@@ -57,6 +112,7 @@ pub fn (mut t TextInput) update(msg termkit.Msg) {
 		}
 		termkit.PasteMsg {
 			t.insert(msg.text)
+			t.revalidate()
 		}
 		termkit.KeyMsg {
 			if msg.kind != .press {
@@ -105,6 +161,7 @@ pub fn (mut t TextInput) update(msg termkit.Msg) {
 					}
 				}
 			}
+			t.revalidate()
 		}
 		else {}
 	}
@@ -123,7 +180,8 @@ fn (t TextInput) display(s string) string {
 }
 
 // view renders the prompt, value and a cursor marker. When mask is set, the
-// value is hidden behind the mask glyph.
+// value is hidden behind the mask glyph. A validation error is appended when
+// set.
 pub fn (t TextInput) view() string {
 	before := rune_prefix(t.value, t.position)
 	mut marker := rune_at(t.value, t.position)
@@ -131,6 +189,10 @@ pub fn (t TextInput) view() string {
 	if marker == '' {
 		marker = ' '
 	}
-	return t.prompt + t.display(before) + '\x1b[7m' + t.display(marker) + '\x1b[0m' +
+	out := t.prompt + t.display(before) + '\x1b[7m' + t.display(marker) + '\x1b[0m' +
 		t.display(after)
+	if t.err != '' {
+		return out + ' (!' + t.err + ')'
+	}
+	return out
 }

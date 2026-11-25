@@ -16,6 +16,18 @@ pub struct Tree {
 pub mut:
 	nodes  []TreeNode
 	cursor int
+	// open_marker prefixes expanded nodes with children.
+	open_marker string = '▾ '
+	// closed_marker prefixes collapsed nodes with children.
+	closed_marker string = '▸ '
+	// leaf_marker prefixes childless nodes.
+	leaf_marker string = '  '
+	// cursor_marker prefixes the selected node.
+	cursor_marker string = '> '
+	// indent is repeated per depth level.
+	indent string = '  '
+	// height limits the visible window; 0 shows everything.
+	height int
 }
 
 // set_nodes replaces the tree contents and selects the first node.
@@ -165,16 +177,30 @@ pub fn (mut t Tree) update(msg termkit.Msg) {
 
 // view renders the visible nodes with indentation and expand markers.
 pub fn (t Tree) view() string {
-	mut out := []string{}
-	for i in t.visible_indices() {
-		marker := if i == t.cursor { '> ' } else { '  ' }
-		mut branch := ''
-		if t.has_children(i) {
-			branch = if t.nodes[i].expanded { '▾ ' } else { '▸ ' }
-		} else {
-			branch = '  '
+	vis := t.visible_indices()
+	pos := t.cursor_pos(vis)
+	mut start := 0
+	mut end := vis.len
+	if t.height > 0 && vis.len > t.height {
+		start = pos - t.height / 2
+		if start < 0 {
+			start = 0
 		}
-		out << marker + repeat('  ', t.depth(i)) + branch + t.nodes[i].label
+		end = start + t.height
+		if end > vis.len {
+			end = vis.len
+			start = end - t.height
+		}
+	}
+	mut out := []string{}
+	for k in start .. end {
+		i := vis[k]
+		marker := if i == t.cursor { t.cursor_marker } else { '  ' }
+		mut branch := t.leaf_marker
+		if t.has_children(i) {
+			branch = if t.nodes[i].expanded { t.open_marker } else { t.closed_marker }
+		}
+		out << marker + repeat(t.indent, t.depth(i)) + branch + t.nodes[i].label
 	}
 	return out.join('\n')
 }

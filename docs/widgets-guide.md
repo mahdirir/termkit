@@ -204,6 +204,35 @@ println(group.view())
 
 ## Help
 
-`Binding` has a `key` and `description`. `Help` holds `bindings` and an
-optional `width`. Its `view()` renders a compact two-column list, truncating
-lines to `width` when set. There is no `update` method.
+`Binding` has a `key` and `description`, plus an `enabled` flag — disabled
+bindings are hidden from the view. `Help` holds `bindings` and an optional
+`width`. Its `view()` renders a compact one-per-line list, truncating lines
+to `width` when set. Set `full: true` for a denser two-column overview.
+There is no `update` method.
+
+## Advanced widget options
+
+- `List`: `filter_fn` replaces the default substring match,
+  `highlight_matches` wraps the filter hit in reverse video, `status` shows a
+  footer line (`set_status`/`clear_status`), and `cycle: true` wraps the
+  cursor from the last item to the first and back.
+- `Viewport`: `gutter: true` shows line numbers, `find(query)` /
+  `find_next()` jump to matches, and `scroll_percent()` reports 0–100.
+- `TextInput`: `validate` rejects or transforms the value after every edit
+  (`err`/`is_valid()` report the result), `suggestions` with `suggest()` and
+  `complete()` offer completions.
+- `Table`: `header_style` styles the header row and `style_fn(row, col)`
+  styles individual body cells.
+- `FilePicker`: `allowed_exts` filters files, `show_size` and
+  `show_permissions` add metadata columns, `show_target` marks symlinks, and
+  `auto_height` sizes the picker to its entries.
+- `Progress`: `view_at(percent)` renders without mutating state, and
+  `gradient: true` blends each cell from `from` to `to` (`style.blend_rgb`).
+- `Spinner`: `set_preset(name)` picks an animation (`line`, `dots`,
+  `mini_dots`, `jump`, `pulse`, `points`, `meter`, `hamburger`, `ellipsis`).
+- `Tree`: custom open/closed/leaf/cursor markers, indent string and a `height`
+  window around the cursor.
+- `Stopwatch`/`Timer`: a non-zero `id` restricts updates to ticks with the
+  same id, so several can run side by side.
+- `Paginator`: `dots` style with custom active/inactive glyphs, or `arabic`
+  with a custom `arabic_format` such as `p%d of %d`.

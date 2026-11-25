@@ -8,6 +8,48 @@ pub mut:
 	frames []string = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 	frame  int
 	label  string
+	// fps is informational: ticks arrive from the program's frame loop.
+	fps int = 10
+}
+
+// spinner_preset returns the frames for a named animation. Unknown names
+// return the default dots.
+pub fn spinner_preset(name string) []string {
+	match name {
+		'line' {
+			return ['-', '\\', '|', '/']
+		}
+		'mini_dots' {
+			return ['⠁', '⠉', '⠙', '⠚', '⠖', '⠦', '⠴', '⠲', '⠳', '⠓']
+		}
+		'jump' {
+			return ['⢄', '⢂', '⢁', '⡁', '⡈', '⡐', '⡠', '⢠', '⢤', '⢦']
+		}
+		'pulse' {
+			return ['█', '▓', '▒', '░', '▒', '▓']
+		}
+		'points' {
+			return ['∙∙∙', '●∙∙', '∙●∙', '∙∙●']
+		}
+		'meter' {
+			return ['▱▱▱', '▰▱▱', '▰▰▱', '▰▰▰', '▰▰▱', '▰▱▱']
+		}
+		'hamburger' {
+			return ['☰', '☱', '☵', '☶', '☴', '☲']
+		}
+		'ellipsis' {
+			return ['', '.', '..', '...']
+		}
+		else {
+			return ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+		}
+	}
+}
+
+// set_preset replaces the frames with a named animation.
+pub fn (mut s Spinner) set_preset(name string) {
+	s.frames = spinner_preset(name)
+	s.frame = 0
 }
 
 // update advances the animation on any tick message.

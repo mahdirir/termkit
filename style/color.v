@@ -66,3 +66,19 @@ pub fn ansi256_fg(index u8) string {
 pub fn ansi256_bg(index u8) string {
 	return '48;5;${index}'
 }
+
+// blend_rgb linearly interpolates between a and b by t in [0, 1].
+pub fn blend_rgb(a Rgb, b Rgb, t f64) Rgb {
+	clamped := if t < 0 {
+		0.0
+	} else if t > 1 {
+		1.0
+	} else {
+		t
+	}
+	return Rgb{
+		r: u8(f64(a.r) + (f64(b.r) - f64(a.r)) * clamped)
+		g: u8(f64(a.g) + (f64(b.g) - f64(a.g)) * clamped)
+		b: u8(f64(a.b) + (f64(b.b) - f64(a.b)) * clamped)
+	}
+}

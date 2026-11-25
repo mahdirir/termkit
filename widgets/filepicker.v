@@ -18,6 +18,19 @@ pub mut:
 	offset_x int
 	offset_y int
 	focused  bool = true
+	// show_size adds a humanized size column.
+	show_size bool
+	// show_permissions adds an rwxrwxrwx column.
+	show_permissions bool
+	// show_target marks symlinks with a trailing @.
+	show_target bool
+	// allowed_exts filters files by extension (directories always show).
+	// An empty list shows everything.
+	allowed_exts []string
+	// auto_height sizes the picker to its entries.
+	auto_height bool
+mut:
+	meta []EntryMeta
 }
 
 // new_filepicker creates a picker for path, loading its entries.
@@ -25,6 +38,13 @@ pub fn new_filepicker(path string) !FilePicker {
 	mut picker := FilePicker{ path: path }
 	picker.reload()!
 	return picker
+}
+
+struct EntryMeta {
+	size    u64
+	mode    string
+	is_link bool
+	is_dir  bool
 }
 
 // reload refreshes the entry list from the current directory.
@@ -36,16 +56,72 @@ pub fn (mut p FilePicker) reload() ! {
 			continue
 		}
 		full := os.join_path(p.path, name)
-		entries << if os.is_dir(full) { name + '/' } else { name }
+		is_dir := os.is_dir(full)
+		if !is_dir && p.allowed_exts.len > 0 {
+			ext := os.file_ext(name).to_lower()
+			mut ok := false
+			for allowed in p.allowed_exts {
+				if ext == allowed.to_lower() {
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				continue
+			}
+		}
+		entries << if is_dir { name + '/' } else { name }
 	}
 	entries.sort()
 	p.entries = entries
+	p.meta = []EntryMeta{len: entries.len}
+	for i, entry in entries {
+		full := p.full_path(entry)
+		st := os.stat(full) or { continue }
+		p.meta[i] = EntryMeta{
+			size:    st.size
+			mode:    perm_string(st)
+			is_link: os.is_link(full)
+			is_dir:  os.is_dir(full)
+		}
+	}
+	if p.auto_height {
+		p.height = p.entries.len + 1
+	}
 	if p.cursor >= p.entries.len {
 		p.cursor = p.entries.len - 1
 	}
 	if p.cursor < 0 {
 		p.cursor = 0
 	}
+}
+
+// perm_string renders the permission bits as rwxrwxrwx.
+fn perm_string(st os.Stat) string {
+	return perm_triad((st.mode >> 6) & 7) + perm_triad((st.mode >> 3) & 7) +
+		perm_triad(st.mode & 7)
+}
+
+fn perm_triad(bits u32) string {
+	mut out := ''
+	out += if bits & 4 != 0 { 'r' } else { '-' }
+	out += if bits & 2 != 0 { 'w' } else { '-' }
+	out += if bits & 1 != 0 { 'x' } else { '-' }
+	return out
+}
+
+// human_size formats bytes as B, KB, MB or GB.
+fn human_size(n u64) string {
+	if n < 1024 {
+		return '${n}B'
+	}
+	if n < 1024 * 1024 {
+		return '${n / 1024}K'
+	}
+	if n < 1024 * 1024 * 1024 {
+		return '${n / (1024 * 1024)}M'
+	}
+	return '${n / (1024 * 1024 * 1024)}G'
 }
 
 // focus marks the picker as accepting keys.
@@ -187,6 +263,18 @@ pub fn (p FilePicker) view() string {
 	for i in start .. end {
 		marker := if i == p.cursor { '> ' } else { '  ' }
 		mut line := p.entries[i]
+		if i < p.meta.len && (p.show_size || p.show_permissions || p.show_target) {
+			m := p.meta[i]
+			if p.show_permissions {
+				line += '  ' + m.mode
+			}
+			if p.show_size && !m.is_dir {
+				line += '  ' + human_size(m.size)
+			}
+			if p.show_target && m.is_link {
+				line += '@'
+			}
+		}
 		if p.width > 0 {
 			line = pad(truncate(line, p.width - 2), p.width - 2)
 		}
