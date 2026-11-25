@@ -1,5 +1,5 @@
 /*
- * termkit C API -- standalone VPM package metif12.termkit.
+ * termkit C API -- standalone VPM package mahdir-ir.termkit.
  *
  * Build the library with: v run tools/build_c.v
  * Output goes to dist/c/: termkit.dll (or .so/.dylib), libtermkit.a,

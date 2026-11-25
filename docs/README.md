@@ -1,6 +1,6 @@
 # termkit documentation
 
-termkit is a standalone VPM module published as `metif12.termkit`. It provides
+termkit is a standalone VPM module published as `mahdir-ir.termkit`. It provides
 an MVU runtime, diffing renderer, reusable widgets, a styling/layout system and
 a Cobra-style CLI framework for V. It stays standalone forever: it is not part
 of the V standard library and is not planned for fold-in to `vlib`.

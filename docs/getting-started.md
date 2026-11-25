@@ -5,10 +5,10 @@
 Install the module from VPM:
 
 ```sh
-v install metif12.termkit
+v install mahdir-ir.termkit
 ```
 
-termkit is and remains a standalone package (`metif12.termkit`). It is not
+termkit is and remains a standalone package (`mahdir-ir.termkit`). It is not
 submitted to, or folded into, the V standard library.
 
 Import only the packages you need:
@@ -25,7 +25,7 @@ Import only the packages you need:
 
 A termkit app owns its state in a model with three methods: `init`, `update`
 and `view`. Save this as `main.v` in a directory with a `v.mod` that depends on
-`metif12.termkit`:
+`mahdir-ir.termkit`:
 
 ```v ignore
 module main

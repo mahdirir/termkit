@@ -72,7 +72,7 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - No vendored C libraries and no new OS-level dependencies.
 
 9. **Zero-dependency VPM module.**
-   - `v install metif12.termkit` works with a stock V toolchain.
+   - `v install mahdir-ir.termkit` works with a stock V toolchain.
    - No module-level globals that leak between programs.
 
 10. **Standalone package shape.**
@@ -113,6 +113,6 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
 - [x] `v check-md` passes on every Markdown file.
 - [x] All examples compile with the master-based compiler; non-interactive
       examples can run in CI.
-- [x] Module is pushed to `metif12/termkit` as a standalone package.
+- [x] Module is pushed to `mahdir-ir/termkit` as a standalone package.
 - [ ] VPM registration awaits explicit approval of the name and description.
       No `vlib` fold-in or `vlang/v` PR is part of this phase.

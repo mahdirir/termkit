@@ -2,7 +2,7 @@
 
 termkit can be consumed from C through a small ABI that uses only C types:
 opaque renderer handles, `const char *` strings and plain integers. This is a
-feature of the standalone `metif12.termkit` package; there is no vlib C API.
+feature of the standalone `mahdir-ir.termkit` package; there is no vlib C API.
 
 ## Build
 

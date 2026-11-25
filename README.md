@@ -17,13 +17,13 @@ command line programs.
 
 `termkit` fills those gaps in one zero-dependency VPM module. It uses `term.ui`
 for platform input and adds the missing layers on top. It is and remains a
-standalone package published as `metif12.termkit`; it is not proposed for
+standalone package published as `mahdir-ir.termkit`; it is not proposed for
 inclusion in the V standard library.
 
 ## Install
 
 ```v ignore
-v install metif12.termkit
+v install mahdir-ir.termkit
 ```
 
 ## Packages

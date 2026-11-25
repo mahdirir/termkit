@@ -9,7 +9,7 @@ registration is the only remaining outward step.
 
 | Decision | Choice |
 | --- | --- |
-| Deliverable | Standalone VPM module `metif12.termkit` |
+| Deliverable | Standalone VPM module `mahdir-ir.termkit` |
 | Scope | Both TUI and CLI layers in one module |
 | Placement | Standalone VPM repo; no `vlib` fold-in and no `vlang/v` PR |
 | bobatea | Independent implementation, compatible names, no copied code |
@@ -162,7 +162,7 @@ termkit/
 - [x] Full `v fmt -l`, `v check-md`, `v -silent test .` pass locally.
 - [x] Every public symbol has a doc comment; `v doc -all termkit` succeeds.
 - [x] Golden completion fixture for the bash script.
-- [x] Push to `metif12/termkit`.
+- [x] Push to `mahdir-ir/termkit`.
 - [ ] VPM registration after explicit approval of the name and description.
 
 ## Test strategy
