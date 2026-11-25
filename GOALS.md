@@ -3,8 +3,8 @@
 ## Mission
 
 Make V a first-class choice for interactive terminal applications by providing
-one coherent, zero-dependency toolkit comparable to Go's Bubble Tea (runtime),
-Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
+one coherent, zero-dependency toolkit covering runtime, components, styling
+and command line interface.
 
 ## Goals
 
@@ -46,7 +46,7 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - Horizontal and vertical composition with minimum sizes and truncation.
    - Correct width handling for CJK, combining marks and ANSI sequences.
 
-6. **A Cobra-class CLI.**
+6. **A full-featured CLI.**
    - Nested commands with persistent and local flags, aliases and groups.
    - Typed flags with shorthands, clustered short flags, `--no-x` negation,
      `--` terminator, hidden/deprecated flags, choice sets and validators.
@@ -62,7 +62,7 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
    - Hooks that receive the parsed command so flags are readable without
      globals; deprecation warnings for old flags and commands.
 
-7. **Cobra-class flag semantics.**
+7. **Expressive flag semantics.**
    - Negatable bool flags (`--no-color`), custom value validators, mutually
      exclusive and required-together flag groups.
    - Hidden and deprecated flags, choice sets, repeatable flags and aliases.
@@ -88,20 +88,19 @@ Bubbles (components), Lip Gloss (styling) and Cobra (command line interface).
 
 ## Non-goals
 
-- Copying code from Bubble Tea, Bubbles, Lip Gloss, Cobra or bobatea.
+- Copying code from other terminal or CLI projects.
 - Changing the V compiler or the V standard library. termkit is not proposed
    for `vlib` inclusion and no `vlang/v` PR is planned.
 - ncurses/PDCurses bindings, mouse hit-testing outside widgets, SSH servers,
   GPU rendering, or a full window manager for the terminal.
-- Bit-for-bit identical output to any Go library.
+- Bit-for-bit identical output to any other implementation.
 - Claiming complete upstream parity on day one; coverage is explicit in PLAN.
 
 ## Compatibility commitments
 
-- Public names match bobatea where semantics match (`batch`, `sequence`,
-  `tick`, `every`, `quit`, `msg_cmd`, `no_cmd`) to ease migration.
-- `view()` returns a string, following Bubble Tea, rather than drawing into a
-  context. The difference is documented.
+- Public command names use conventional MVU terms (`batch`, `sequence`,
+  `tick`, `every`, `quit`, `msg_cmd`, `no_cmd`).
+- `view()` returns a string rather than drawing into a context.
 - The package `termkit.cli` does not modify or shadow `vlib/cli`; both remain
   available and independent.
 

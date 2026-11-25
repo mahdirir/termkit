@@ -268,8 +268,8 @@ pub mut:
 }
 ```
 
-FilePicker browses directories and selects a file. It follows the Bubbles file picker interaction
-model: arrows move, Enter descends or selects and Backspace ascends.
+FilePicker browses directories and selects a file: arrows move, Enter descends
+or selects and Backspace ascends.
 
 [[Return to contents]](#Contents)
 

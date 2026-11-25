@@ -1,7 +1,6 @@
 # termkit
 
-A V toolkit for building terminal applications that can stand next to Go's
-Bubble Tea, Bubbles, Lip Gloss and Cobra.
+A V toolkit for building interactive terminal applications.
 
 > **Status: core implemented.** The MVU runtime, diffing renderer, styling,
 > core widgets and the CLI framework are available. See `GOALS.md` for the
@@ -188,7 +187,7 @@ library.
 
 - **Model / Message / Command.** State is owned by the model. Events arrive as
   messages; side effects are requested as commands. This is the Elm-style
-  shape made popular by Bubble Tea.
+  Model / Message / Command shape.
 - **Commands are values, not bare closures.** V registers closure contexts in a
   process-wide table, so a per-keystroke closure would pin memory forever.
   `batch`, `sequence`, `tick` and `every` are data, not captured functions.
@@ -226,9 +225,8 @@ library.
 
 ## Inspiration
 
-The API is inspired by Bubble Tea, Bubbles, Lip Gloss and Cobra, and by
-`tauraamui.bobatea` for the V-specific constraints around commands and
-closures. No code from those projects is used; this is an independent
+The API follows established MVU and CLI conventions, adapted to
+V-specific constraints around commands and closures. This is an independent
 implementation under the MIT license.
 
 ## Paste, focus and repeat

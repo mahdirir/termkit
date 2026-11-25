@@ -3,9 +3,8 @@ module widgets
 import os
 import termkit
 
-// FilePicker browses directories and selects a file. It follows the Bubbles
-// file picker interaction model: arrows move, Enter descends or selects and
-// Backspace ascends.
+// FilePicker browses directories and selects a file: arrows move, Enter
+// descends or selects and Backspace ascends.
 pub struct FilePicker {
 pub mut:
 	path        string

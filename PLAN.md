@@ -12,7 +12,7 @@ registration is the only remaining outward step.
 | Deliverable | Standalone VPM module `mahdir-ir.termkit` |
 | Scope | Both TUI and CLI layers in one module |
 | Placement | Standalone VPM repo; no `vlib` fold-in and no `vlang/v` PR |
-| bobatea | Independent implementation, compatible names, no copied code |
+| Compatibility | Independent implementation with conventional names, no copied code |
 
 ## Environment
 

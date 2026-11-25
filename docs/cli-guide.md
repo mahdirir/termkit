@@ -1,6 +1,6 @@
 # CLI guide
 
-`termkit.cli` is a Cobra-style command framework with typed flags, generated
+`termkit.cli` is a command framework with typed flags, generated
 help and shell completion. Errors are returned rather than printed directly.
 
 Import it as `import termkit.cli`. A `Command` tree is built by constructing

@@ -1,6 +1,6 @@
 # MVU guide
 
-termkit follows the Model / View / Update shape popularised by Bubble Tea.
+termkit follows the Model / View / Update shape.
 State lives in a model, events arrive as messages, and side effects are
 requested by returning a command.
 
