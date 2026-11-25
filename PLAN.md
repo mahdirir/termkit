@@ -2,8 +2,9 @@
 
 ## Status
 
-All six milestones are complete. termkit is a standalone VPM package; VPM
-registration is the only remaining outward step.
+All six milestones are complete and the package is registered on VPM as
+`mahdir-ir.TermKit`. termkit is a standalone VPM package. Future work from
+rival-gap research is tracked as milestones M7–M13 below.
 
 ## Decisions
 
@@ -163,7 +164,79 @@ termkit/
 - [x] Every public symbol has a doc comment; `v doc -all termkit` succeeds.
 - [x] Golden completion fixture for the bash script.
 - [x] Push to `mahdir-ir/termkit`.
-- [ ] VPM registration after explicit approval of the name and description.
+- [x] VPM registration as `mahdir-ir.TermKit` (live on vpm.vlang.io).
+
+### M7 — Subprocess + TTY control (future)
+
+- [ ] `Exec`-style blocking subprocess: release TTY, run command, restore + resume.
+- [ ] `ReleaseTerminal` / `RestoreTerminal` public API for user-driven pauses.
+- [ ] Suspend/resume (`SuspendMsg`/`ResumeMsg`, SIGTSTP/SIGCONT handling).
+- [ ] Interrupt/quit split (`SIGINT→InterruptMsg` vs `SIGTERM→QuitMsg`).
+- [ ] `ClearScreen` command (cursor-home + clear without alt-screen).
+
+### M8 — Key bindings + help foundation (future)
+
+- [ ] Declarative `key.Binding{keys, help}` with `Matches()`, enable/disable/unbind,
+      as the source of truth for help text.
+- [ ] Elastic help: width-aware truncation with ellipsis, multi-column
+      full-help view, auto-hide disabled bindings.
+
+### M9 — Dynamic completion (future)
+
+- [ ] Per-arg dynamic completion + per-flag completion funcs returning
+      (values, directive).
+- [ ] Completion directives + file semantics (`NoSpace`/`KeepOrder`/extension
+      and directory filters, filename/dirname marking).
+- [ ] `ActiveHelp` annotation lines shown during completion.
+- [ ] Required-flag UX: exactly-one-required combination, surface required
+      flags in completion output.
+
+### M10 — Layout correctness (future)
+
+- [ ] Word-wrap + render-time clamps (`MaxWidth`/`MaxHeight`/`Inline`,
+      ANSI-preserving wrap).
+- [ ] Fractional position + `Place` with styled whitespace; proportional joins.
+- [ ] `Inherit` (unset-only) + `Unset*` + pure-value style copy.
+- [ ] Geometry helpers (`Size`/`Width`/`Height`, frame/border size).
+
+### M11 — Widget upgrades (future)
+
+- [ ] Table: per-cell style func + scroll viewport.
+- [ ] List: pluggable fuzzy filter func, match highlighting, timed status
+      messages, embedded spinner, rich item delegates, infinite scroll.
+- [ ] Viewport: search (highlight next/previous/ensure-visible), line-number
+      gutter, per-line styling, `ScrollPercent`, alt-screen position mode.
+- [ ] Text input: suggestion cycling, validation func, echo character,
+      masked-aware word delete, paste command.
+- [ ] File picker: permissions + humanized size columns, symlink target
+      resolution, allowed-types filtering, auto height.
+- [ ] Progress: multi-color gradient, static vs animated view, spring options,
+      half-block hi-res. Spinner preset catalog. Tree per-level style funcs,
+      custom enumerators/indenters, scroll offset. Multi-timer-safe tick IDs.
+
+### M12 — CLI robustness (future)
+
+- [ ] Errorable pre/post hooks aborting before validation.
+- [ ] Optional-value flags + counter flags (`-vvv`); flag-name normalization.
+- [ ] Child-traversing parent-local parsing; unknown-flag passthrough and
+      non-parsing modes for wrapper commands.
+- [ ] YAML/Markdown/reST doc generators (man pages already exist).
+- [ ] Overridable help/usage/version templates; suggestion tuning
+      (aliases, minimum-distance threshold); config-file convention docs.
+
+### M13 — Color + canvas (future)
+
+- [ ] Terminal queries (background/foreground color, cursor position,
+      capability replies) enabling adaptive themes.
+- [ ] Adaptive light/dark colors, color math (blend/darken/lighten/alpha),
+      extra attributes (faint, blink, strikethrough, underline styles,
+      hyperlinks), tab-width handling.
+- [ ] Layers/canvas compositor with hit-testing; typed mouse messages
+      (click/release/wheel/motion with modifiers); OSC52 clipboard.
+- [ ] Static list/tree pretty-print packages; border catalog (variants,
+      per-side colors, gradient blend, layout-preserving hidden border).
+- [ ] Environment message + forced color-profile message (test ergonomics);
+      native cursor object; OS-level progress/task-status view state.
 
 ## Test strategy
 
