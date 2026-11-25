@@ -175,11 +175,11 @@ termkit/
 - [x] Interrupt/quit split (`InterruptMsg` reaches the model, then quits).
 - [x] `ClearScreen` command (cursor-home + clear without alt-screen).
 
-### M8 — Key bindings + help foundation (future)
+### M8 — Key bindings + help foundation (done)
 
-- [ ] Declarative `key.Binding{keys, help}` with `Matches()`, enable/disable/unbind,
+- [x] Declarative `Binding{keys, help}` with `Matches()`, enable/disable,
       as the source of truth for help text.
-- [ ] Elastic help: width-aware truncation with ellipsis, multi-column
+- [x] Elastic help: width-aware truncation with ellipsis, multi-column
       full-help view, auto-hide disabled bindings.
 
 ### M9 — Dynamic completion (future)
