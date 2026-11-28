@@ -29,6 +29,124 @@ fn test_draw_text_and_diff() {
 	assert !second.contains('hi')
 }
 
+fn test_frame_erases_removed_text() {
+	mut r := new_renderer(8, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, 'abcd', '', '', 0)
+	assert r.frame().contains('abcd')
+	r.clear()
+	r.draw_text(0, 0, 'ab', '', '', 0)
+	out := r.frame()
+	assert out.contains('\x1b[1;3H')
+	assert out.contains('  ')
+	assert r.frame() == ''
+}
+
+fn test_frame_erases_whole_cleared_screen() {
+	mut r := new_renderer(4, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, 'wxyz', '', '', 0)
+	r.frame()
+	r.clear()
+	out := r.frame()
+	assert out.contains('\x1b[1;1H')
+	assert out.contains('    ')
+}
+
+fn test_frame_keeps_cell_after_new_wide_glyph() {
+	mut r := new_renderer(5, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, 'abc', '', '', 0)
+	r.frame()
+	r.draw_text(0, 0, '世', '', '', 0)
+	r.draw_text(2, 0, 'c', '', '', 0)
+	out := r.frame()
+	assert out == '\x1b[1;1H\x1b[0m世\x1b[0m'
+}
+
+fn test_frame_wide_glyph_continuation_not_erased_with_style_change() {
+	mut r := new_renderer(4, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, 'a', '', '', 0)
+	r.draw_text(1, 0, 'b', '31', '', 0)
+	r.frame()
+	r.clear()
+	r.draw_text(0, 0, '世', '32', '', 0)
+	out := r.frame()
+	assert out.contains('世')
+	assert !out.contains('\x1b[1;2H')
+}
+
+fn test_frame_erases_wide_glyph_both_cells() {
+	mut r := new_renderer(4, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, '世', '', '', 0)
+	r.frame()
+	r.clear()
+	out := r.frame()
+	assert out.contains('\x1b[1;1H')
+	assert out.contains('  ')
+}
+
+fn test_frame_redraws_wide_glyph_after_continuation_had_text() {
+	mut r := new_renderer(4, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, '世', '', '', 0)
+	r.draw_text(1, 0, 'x', '', '', 0)
+	r.frame()
+	r.clear()
+	r.draw_text(0, 0, '世', '', '', 0)
+	out := r.frame()
+	assert out.contains('世')
+}
+
+fn test_frame_erases_old_wide_glyph_tail_when_replaced() {
+	mut r := new_renderer(4, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, '世', '', '', 0)
+	r.frame()
+	r.clear()
+	r.draw_text(0, 0, 'a', '', '', 0)
+	out := r.frame()
+	assert out.contains('a ')
+}
+
+fn test_frame_erases_consecutive_wide_glyphs() {
+	mut r := new_renderer(4, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, '世世', '', '', 0)
+	r.frame()
+	r.clear()
+	out := r.frame()
+	assert out.contains('    ')
+}
+
+fn test_frame_erases_wide_tail_and_styled_neighbour() {
+	mut r := new_renderer(4, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, '世', '', '', 0)
+	r.draw_text(2, 0, 'b', '31', '', 0)
+	r.frame()
+	r.clear()
+	r.draw_text(0, 0, 'Z', '32', '', 0)
+	out := r.frame()
+	assert out.contains('Z')
+	assert out.contains('  ')
+}
+
+fn test_frame_wide_glyph_replaced_in_second_cell() {
+	mut r := new_renderer(4, 1, .ansi)
+	r.sync_updates = false
+	r.draw_text(0, 0, '世', '', '', 0)
+	r.frame()
+	r.clear()
+	r.set_cell(1, 0, 'x', '', '', 0)
+	out := r.frame()
+	assert out.contains('\x1b[1;1H')
+	// The erase and the new glyph are written in one run: " x" at column 1.
+	assert out.contains(' x')
+}
+
 fn test_style_codes() {
 	mut r := new_renderer(4, 1, .ansi)
 	r.sync_updates = false

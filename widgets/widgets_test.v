@@ -1,6 +1,7 @@
 module widgets
 
 import termkit
+import term.ui as tui
 import time
 
 fn test_textinput_editing() {
@@ -57,6 +58,39 @@ fn test_list_navigation() {
 	list.update(termkit.KeyMsg{ key: termkit.key_down })
 	assert list.selected_item() == 'beta'
 	assert list.view().contains('> beta')
+}
+
+fn test_textinput_does_not_insert_raw_bytes_from_special_keys() {
+	mut input := TextInput{ prompt: '> ' }
+	input.update(termkit.KeyMsg{ key: 'a', utf8: 'a' })
+	// Windows reports NUL in utf8 for arrows; Unix reports a raw CSI sequence.
+	input.update(termkit.msg_from_event(&tui.Event{ typ: .key_down, code: .up, utf8: '\x00' }))
+	input.update(termkit.msg_from_event(&tui.Event{
+		typ:  .key_down
+		code: .f1
+		utf8: '\x1bOP'
+	}))
+	assert input.value == 'a'
+}
+
+fn test_modified_letter_keys_are_not_inserted_as_text() {
+	mut input := TextInput{ prompt: '> ' }
+	mut ctrl := unsafe { termkit.Modifiers(0) }
+	ctrl |= .ctrl
+	input.update(termkit.KeyMsg{ key: 'a', utf8: '\x01', modifiers: ctrl })
+	assert input.value == ''
+	mut alt := unsafe { termkit.Modifiers(0) }
+	alt |= .alt
+	input.update(termkit.KeyMsg{ key: 'a', utf8: '\x1ba', modifiers: alt })
+	assert input.value == ''
+}
+
+fn test_list_ignores_key_release_from_terminal() {
+	mut list := List{ height: 3 }
+	list.set_items(['alpha', 'beta', 'gamma'])
+	release := termkit.msg_from_event(&tui.Event{ typ: .key_up, code: .down, utf8: '\x00' })
+	list.update(release)
+	assert list.selected_item() == 'alpha'
 }
 
 fn test_list_multi_select() {

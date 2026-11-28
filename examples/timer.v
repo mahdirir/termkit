@@ -24,6 +24,9 @@ fn (mut m Clock) init() termkit.Cmd {
 fn (mut m Clock) update(msg termkit.Msg) (termkit.Model, termkit.Cmd) {
 	match msg {
 		termkit.KeyMsg {
+			if msg.kind == .release {
+				return m, termkit.no_cmd
+			}
 			if msg.key == 'q' {
 				return m, termkit.quit()
 			}

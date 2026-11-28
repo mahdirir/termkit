@@ -148,9 +148,10 @@ pub fn (mut t TextArea) update(msg termkit.Msg) {
 					}
 				}
 				else {
-					if msg.utf8 != '' {
-						t.insert(msg.utf8)
-					} else if msg.key.len == 1 || rune_len(msg.key) < msg.key.len {
+					text := msg.text()
+					if text != '' {
+						t.insert(text)
+					} else if !msg.is_ctrl() && !msg.is_alt() && termkit.single_rune_text(msg.key) {
 						t.insert(msg.key)
 					}
 				}

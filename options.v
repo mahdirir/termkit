@@ -34,4 +34,7 @@ pub:
 	cleanup_fn ?fn ()
 	// filter can drop or transform a message before it reaches the model.
 	filter ?fn (Msg) ?Msg
+	// force_profile overrides terminal color profile detection. It is
+	// mainly useful for tests and screenshots.
+	force_profile ?ColorProfile
 }

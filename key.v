@@ -200,13 +200,28 @@ pub fn key_name(code tui.KeyCode) string {
 	return ''
 }
 
-// key_for_event returns the key name carried by a term.ui event. Text events
-// are preferred so UTF-8 input is preserved.
+// key_for_event returns the key name carried by a term.ui event. Printable
+// text is preferred so UTF-8 and IME input survive; control characters, NUL
+// padding and raw escape sequences are not text and must not mask the decoded
+// key name (arrows, function keys, Enter, Backspace and friends all arrive
+// with bytes in Event.utf8).
 pub fn key_for_event(e &tui.Event) string {
-	if e.utf8 != '' {
+	if is_printable_text(e.utf8) {
 		return e.utf8
 	}
 	return key_name(e.code)
+}
+
+fn is_printable_text(s string) bool {
+	if s == '' {
+		return false
+	}
+	for r in s.runes() {
+		if r < 0x20 || (r >= 0x7f && r <= 0x9f) || (r >= 0xd800 && r <= 0xdfff) {
+			return false
+		}
+	}
+	return true
 }
 
 // modifiers_from converts term.ui modifiers to termkit modifiers.

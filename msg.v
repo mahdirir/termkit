@@ -76,6 +76,30 @@ pub fn (m KeyMsg) is_press() bool {
 	return m.kind == .press
 }
 
+// text returns the printable text carried by the event, or '' for named keys
+// such as arrows and function keys. term.ui leaves raw escape bytes or NUL in
+// Event.utf8 for those keys; inserting them into editable widgets would corrupt
+// their contents.
+pub fn (m KeyMsg) text() string {
+	if is_printable_text(m.utf8) {
+		return m.utf8
+	}
+	return ''
+}
+
+// single_rune_text reports whether s holds exactly one Unicode scalar. It
+// distinguishes printable text such as 'é' from named keys such as 'enter'.
+pub fn single_rune_text(s string) bool {
+	if s == '' {
+		return false
+	}
+	mut count := 0
+	for _ in s.runes() {
+		count++
+	}
+	return count == 1
+}
+
 // MouseMsg is delivered for mouse activity.
 pub struct MouseMsg {
 pub:

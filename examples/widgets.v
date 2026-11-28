@@ -23,6 +23,9 @@ fn (mut m App) init() termkit.Cmd {
 fn (mut m App) update(msg termkit.Msg) (termkit.Model, termkit.Cmd) {
 	match msg {
 		termkit.KeyMsg {
+			if msg.kind == .release {
+				return m, termkit.no_cmd
+			}
 			if msg.key == 'q' {
 				return m, termkit.quit()
 			}

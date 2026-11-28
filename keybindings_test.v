@@ -1,5 +1,14 @@
 module termkit
 
+import term.ui as tui
+
+fn test_keymap_resolves_terminal_arrow_event() {
+	mut km := KeyMap{}
+	km.bind(key_down, unsafe { Modifiers(0) }, 'next', no_cmd)
+	msg := msg_from_event(&tui.Event{ typ: .key_down, code: .down, utf8: '\x00' }) as KeyMsg
+	assert km.resolve_msg(msg) != none
+}
+
 fn test_keymap_resolve() {
 	mut km := KeyMap{}
 	km.bind('q', unsafe { Modifiers(0) }, 'quit', quit())

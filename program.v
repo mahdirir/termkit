@@ -226,9 +226,13 @@ fn (mut p Program) handle(msg Msg) {
 	if p.pasting {
 		match msg {
 			KeyMsg {
-				if msg.utf8.len > 0 {
+				text := msg.text()
+				if text != '' {
+					p.paste_buf += text
+				} else if msg.utf8 == '\r' || msg.utf8 == '\n' || msg.utf8 == '\t' {
+					// Line breaks and tabs are paste content, not key names.
 					p.paste_buf += msg.utf8
-				} else if msg.key.len > 0 {
+				} else if !msg.is_ctrl() && !msg.is_alt() && single_rune_text(msg.key) {
 					p.paste_buf += msg.key
 				}
 				return
@@ -268,6 +272,37 @@ fn (mut p Program) dispatch(cmd Cmd) {
 		}
 		ExecCmd {
 			p.run_exec(cmd)
+		}
+		QueryCmd {
+			if !isnil(p.ui) {
+				p.ui.write(terminal_query(cmd.kind))
+				p.ui.flush()
+			}
+		}
+		ClipboardCmd {
+			if !isnil(p.ui) {
+				p.ui.write(osc52_encode(cmd.text))
+				p.ui.flush()
+			}
+		}
+		EnvCmd {
+			mut vars := map[string]string{}
+			for key in cmd.keys {
+				vars[key] = os.getenv(key)
+			}
+			p.send(EnvMsg{ vars: vars })
+		}
+		CursorCmd {
+			if !isnil(p.ui) {
+				p.ui.write(cursor_sequences(cmd.cursor))
+				p.ui.flush()
+			}
+		}
+		TaskProgressCmd {
+			if !isnil(p.ui) {
+				p.ui.write(task_progress_seq(cmd.state, cmd.value))
+				p.ui.flush()
+			}
 		}
 	}
 }
@@ -358,20 +393,34 @@ fn frame_cb(user_data voidptr) {
 	if isnil(p.ui) {
 		return
 	}
+	profile := if forced := p.opts.force_profile {
+		forced
+	} else {
+		detect_color_profile()
+	}
+	w := if p.ui.window_width > 0 { p.ui.window_width } else { 80 }
+	h := if p.ui.window_height > 0 { p.ui.window_height } else { 24 }
+	p.ui.write(p.draw_frame(profile, w, h))
+	p.ui.flush()
+}
+
+// draw_frame renders the current view and returns this frame's escape
+// sequences. The first call creates the renderer and includes its enter
+// sequence. It is separate from frame_cb so the render path is testable.
+fn (mut p Program) draw_frame(profile ColorProfile, width int, height int) string {
+	mut r := p.renderer or { Renderer{} }
+	mut out := ''
 	if p.renderer == none {
-		w := if p.ui.window_width > 0 { p.ui.window_width } else { 80 }
-		h := if p.ui.window_height > 0 { p.ui.window_height } else { 24 }
-		mut r := new_renderer(w, h, detect_color_profile())
+		r = new_renderer(width, height, profile)
 		r.alt_screen = p.opts.alt_screen
-		p.ui.write(r.enter())
+		out += r.enter()
 		p.renderer = r
 	}
-	mut r := p.renderer or { return }
 	r.clear()
 	r.draw_text(0, 0, p.view(), '', '', 0)
-	p.ui.write(r.frame())
+	out += r.frame()
 	p.renderer = r
-	p.ui.flush()
+	return out
 }
 
 // context_cancelled reports whether ctx has been cancelled.

@@ -84,6 +84,9 @@ fn (mut m Logs) update(msg termkit.Msg) (termkit.Model, termkit.Cmd) {
 			return m, termkit.no_cmd
 		}
 		termkit.KeyMsg {
+			if msg.kind == .release {
+				return m, termkit.no_cmd
+			}
 			match msg.key {
 				'q' {
 					return m, termkit.quit()

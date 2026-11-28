@@ -68,6 +68,9 @@ mut:
 	sync_updates bool = true
 	alt_screen   bool
 	has_rendered bool
+	// dirty records that the grid changed since the last frame. Without it a
+	// second frame() call would look like every cell was erased.
+	dirty bool = true
 }
 
 // new_renderer creates a blank renderer of the given size.
@@ -97,14 +100,20 @@ pub fn (mut r Renderer) resize(width int, height int) {
 	r.height = height
 	r.cells = []Cell{len: width * height, init: blank}
 	r.prev = []Cell{len: width * height, init: blank}
+	r.dirty = true
 }
 
-// clear resets the current grid to blank cells.
-pub fn (mut r Renderer) clear() {
+fn (mut r Renderer) clear_cells() {
 	blank := Cell{}
 	for i in 0 .. r.cells.len {
 		r.cells[i] = blank
 	}
+}
+
+// clear resets the current grid to blank cells.
+pub fn (mut r Renderer) clear() {
+	r.clear_cells()
+	r.dirty = true
 }
 
 // set_cell places a string at x,y. fg and bg are SGR parameter strings (for
@@ -126,6 +135,7 @@ pub fn (mut r Renderer) set_cell(x int, y int, text string, fg string, bg string
 	for i in x + 1 .. x + w {
 		r.cells[y * r.width + i] = Cell{ width: 0 }
 	}
+	r.dirty = true
 }
 
 // draw_text writes text starting at x,y. SGR color and attribute sequences in
@@ -316,54 +326,93 @@ fn apply_sgr(seq string, mut st SgrState) {
 	}
 }
 
+struct CellWrite {
+	x    int
+	y    int
+	cell Cell
+mut:
+	text string
+}
+
 // frame returns the escape sequences needed to turn the previous grid into
 // the current one, then swaps the buffers. An unchanged frame returns ''.
 pub fn (mut r Renderer) frame() string {
-	mut out := ''
-	mut skip_until := -1
-	for y in 0 .. r.height {
-		for x in 0 .. r.width {
-			idx := y * r.width + x
-			if idx <= skip_until {
-				continue
-			}
-			c := r.cells[idx]
-			if c.width == 0 {
-				continue
-			}
-			p := r.prev[idx]
-			if c.text == p.text && c.fg == p.fg && c.bg == p.bg && c.attrs == p.attrs {
-				continue
-			}
-			// Batch adjacent changed cells that share a style into one write.
-			mut run := c.text
-			mut j := idx + 1
-			row_end := (y + 1) * r.width
-			for j < row_end {
-				nc := r.cells[j]
-				np := r.prev[j]
-				if nc.width == 0 {
-					j++
+	if !r.dirty {
+		return ''
+	}
+	// Collect the cells that must be repainted first. Wide glyphs occupy two
+	// cells whose continuation is indistinguishable from a blank cell, so an
+	// erase may need to cover two columns and a replaced glyph's old tail
+	// needs its own space. Deciding this before batching keeps runs correct.
+	mut writes := []CellWrite{}
+	mut covered_until := -1
+	for idx in 0 .. r.cells.len {
+		if idx <= covered_until {
+			continue
+		}
+		x := idx % r.width
+		y := idx / r.width
+		c := r.cells[idx]
+		p := r.prev[idx]
+		mut text := ''
+		if c.width > 0 {
+			unchanged := c.text == p.text && c.fg == p.fg && c.bg == p.bg && c.attrs == p.attrs
+			if unchanged {
+				if c.width == 1 || idx + 1 >= r.cells.len || r.prev[idx + 1].text == '' {
 					continue
 				}
-				if nc.fg != c.fg || nc.bg != c.bg || nc.attrs != c.attrs {
-					break
-				}
-				if nc.text == np.text && nc.fg == np.fg && nc.bg == np.bg && nc.attrs == np.attrs {
-					break
-				}
-				run += nc.text
-				j++
+				// A wide glyph whose continuation column previously held a
+				// different glyph must be redrawn: the changed cell itself is
+				// skipped as a continuation and would stay stale otherwise.
 			}
-			skip_until = j - 1
-			out += '\x1b[${y + 1};${x + 1}H'
-			out += style_for(c, r.profile)
-			out += run
+			text = c.text
+		} else if x > 0 && r.cells[idx - 1].width > 1 {
+			// Continuation cell of a wide glyph drawn in this frame.
+			continue
+		} else if p.text != '' {
+			// A glyph was here in the previous frame: erase it.
+			text = ' '
+		} else if x > 0 && r.prev[idx - 1].width > 1 {
+			// Old tail of a wide glyph that this frame replaced with a
+			// single-width cell at idx-1.
+			text = ' '
+		} else {
+			continue
+		}
+		writes << CellWrite{ x: x, y: y, cell: c, text: text }
+		if c.width == 0 && p.width > 1 && idx + 1 < r.cells.len && (idx + 1) / r.width == y && r.cells[idx + 1].width == 0 {
+			// Both cells of the old wide glyph are now blank; cover the
+			// second one too instead of relying on the terminal to clear it.
+			writes[writes.len - 1].text += ' '
+			covered_until = idx + 1
 		}
 	}
+	mut out := ''
+	mut i := 0
+	for i < writes.len {
+		w := writes[i]
+		mut run := w.text
+		mut j := i + 1
+		for j < writes.len {
+			n := writes[j]
+			if n.y != w.y || n.x != writes[j - 1].x + writes[j - 1].text.len {
+				break
+			}
+			if n.cell.fg != w.cell.fg || n.cell.bg != w.cell.bg || n.cell.attrs != w.cell.attrs {
+				break
+			}
+			run += n.text
+			j++
+		}
+		out += '\x1b[${w.y + 1};${w.x + 1}H'
+		out += style_for(w.cell, r.profile)
+		out += run
+		i = j
+	}
 	r.prev = r.cells.clone()
-	r.clear()
+	r.clear_cells()
 	r.has_rendered = true
+	r.dirty = false
 	if out == '' {
 		return ''
 	}

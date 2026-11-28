@@ -194,10 +194,11 @@ pub fn (mut l List) update(msg termkit.Msg) {
 					}
 				}
 				else {
-					if msg.utf8.len > 0 {
-						l.filter += msg.utf8
+					text := msg.text()
+					if text != '' {
+						l.filter += text
 						l.clamp()
-					} else if msg.key.len == 1 {
+					} else if !msg.is_ctrl() && !msg.is_alt() && termkit.single_rune_text(msg.key) {
 						l.filter += msg.key
 						l.clamp()
 					}

@@ -27,6 +27,14 @@ int main(void) {
     if (strstr(frame, "hi") == NULL || strstr(frame, "\x1b[31m") == NULL) {
         return 3;
     }
+    tk_renderer_clear(renderer);
+    const char *erased = tk_renderer_frame(renderer);
+    if (strstr(erased, "  ") == NULL) {
+        return 10;
+    }
+    if (strcmp(tk_renderer_frame(renderer), "") != 0) {
+        return 11;
+    }
     tk_renderer_free(renderer);
 
     const char *box = tk_style_render("hello", TK_BORDER_ROUNDED, "demo", 1, 0, 16,

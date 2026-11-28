@@ -42,6 +42,23 @@ fn (mut m CounterModel) view() string {
 	return 'n=${m.n}:${m.seen.join(',')}'
 }
 
+struct StaticViewModel {
+mut:
+	text string
+}
+
+fn (mut m StaticViewModel) init() Cmd {
+	return no_cmd
+}
+
+fn (mut m StaticViewModel) update(_ Msg) (Model, Cmd) {
+	return m, no_cmd
+}
+
+fn (mut m StaticViewModel) view() string {
+	return m.text
+}
+
 struct PasteModel {
 mut:
 	pasted        string
@@ -101,11 +118,53 @@ fn test_program_dispatches_commands() {
 	assert p.view() == 'n=0:e,echo'
 }
 
+fn test_key_release_from_terminal_is_marked_release() {
+	release := msg_from_event(&tui.Event{ typ: .key_up, code: .down, utf8: '\x00' })
+	match release {
+		KeyMsg {
+			assert release.key == key_down
+			assert release.kind == .release
+		}
+		else {
+			assert false
+		}
+	}
+}
+
 fn test_program_quits() {
 	mut p := new_test_program()
 	p.send(KeyMsg{ key: 'q' })
 	p.process_queue()
 	assert p.quitting
+}
+
+fn test_repeat_keys_still_reach_model() {
+	mut p := new_test_program()
+	p.send(KeyMsg{ key: 'i', kind: .repeat })
+	p.process_queue()
+	assert p.view() == 'n=1:i'
+}
+
+fn test_program_draw_frame_erases_shrinking_view() {
+	mut model := &StaticViewModel{ text: 'abcd' }
+	mut p := new_program(model, ProgramOpts{ without_renderer: true })
+	p.renderer = new_renderer(8, 2, .ansi)
+	first := p.draw_frame(.ansi, 8, 2)
+	assert first.contains('abcd')
+	model.text = 'ab'
+	second := p.draw_frame(.ansi, 8, 2)
+	assert second.contains('\x1b[1;3H')
+	assert second.contains('  ')
+	assert p.draw_frame(.ansi, 8, 2) == ''
+}
+
+fn test_navigation_keys_reach_model_from_terminal_events() {
+	mut p := new_test_program()
+	// Unix reports the raw escape sequence in utf8; Windows reports NUL.
+	p.send(msg_from_event(&tui.Event{ typ: .key_down, code: .down, utf8: '\x1b[B' }))
+	p.send(msg_from_event(&tui.Event{ typ: .key_down, code: .up, utf8: '\x00' }))
+	p.process_queue()
+	assert p.view() == 'n=0:down,up'
 }
 
 fn tick_test_message(at i64) Msg {
@@ -200,6 +259,17 @@ fn test_bracketed_paste_accumulates_into_one_message() {
 	p.send(PasteEndMsg{})
 	p.process_queue()
 	assert p.view() == 'hi'
+}
+
+fn test_paste_preserves_multibyte_and_control_keys() {
+	mut p := new_paste_program()
+	p.send(PasteStartMsg{})
+	p.send(KeyMsg{ key: 'é' })
+	p.send(KeyMsg{ key: '世' })
+	p.send(msg_from_event(&tui.Event{ typ: .key_down, code: .enter, utf8: '\r' }))
+	p.send(PasteEndMsg{})
+	p.process_queue()
+	assert p.view() == 'é世\r'
 }
 
 fn test_paste_through_raw_terminal_events() {

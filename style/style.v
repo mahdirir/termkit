@@ -34,6 +34,10 @@ pub enum BorderKind {
 	single
 	rounded
 	double
+	thick
+	block
+	ascii
+	hidden
 }
 
 // Style describes how a block of text is rendered.
@@ -65,6 +69,12 @@ pub mut:
 	// diffing renderer only parses SGR, so linked output is best used with
 	// Style.apply rather than the cell renderer.
 	link string
+	// tab_width expands tab characters to this many spaces during render.
+	// Values <= 0 leave tabs untouched.
+	tab_width int
+	// border_fg is the SGR parameter for the border color. Empty keeps the
+	// style foreground.
+	border_fg string
 }
 
 // sgr returns the SGR sequence that activates this style.
@@ -145,8 +155,29 @@ fn glyphs_for(kind BorderKind) Glyphs {
 		.single { Glyphs{ tl: '┌', tr: '┐', bl: '└', br: '┘', h: '─', v: '│' } }
 		.rounded { Glyphs{ tl: '╭', tr: '╮', bl: '╰', br: '╯', h: '─', v: '│' } }
 		.double { Glyphs{ tl: '╔', tr: '╗', bl: '╚', br: '╝', h: '═', v: '║' } }
+		.thick { Glyphs{ tl: '┏', tr: '┓', bl: '┗', br: '┛', h: '━', v: '┃' } }
+		.block { Glyphs{ tl: '█', tr: '█', bl: '█', br: '█', h: '█', v: '█' } }
+		.ascii { Glyphs{ tl: '+', tr: '+', bl: '+', br: '+', h: '-', v: '|' } }
+		.hidden { Glyphs{ tl: ' ', tr: ' ', bl: ' ', br: ' ', h: ' ', v: ' ' } }
 		else { Glyphs{} }
 	}
+}
+
+// border_open returns the SGR switch for border glyphs, or an empty string
+// when the border uses the style foreground.
+fn (s Style) border_open() string {
+	if s.border_fg == '' {
+		return ''
+	}
+	return '\x1b[${s.border_fg}m'
+}
+
+// expand_tabs replaces tab characters with tab_width spaces.
+pub fn expand_tabs(text string, tab_width int) string {
+	if tab_width <= 0 || !text.contains('\t') {
+		return text
+	}
+	return text.replace('\t', ' '.repeat(tab_width))
 }
 
 fn repeat(s string, n int) string {
@@ -339,7 +370,7 @@ pub fn (s Style) render(text string) string {
 	if styled.max_width > 0 && (styled.width <= 0 || styled.width > styled.max_width) {
 		styled.width = styled.max_width
 	}
-	mut body := text
+	mut body := expand_tabs(text, styled.tab_width)
 	if styled.max_height > 0 {
 		lines := body.split('\n')
 		if lines.len > styled.max_height {
@@ -430,6 +461,8 @@ fn (s Style) render_block(text string) string {
 		return out + body.join('\n') + '\x1b[0m'
 	}
 	g := glyphs_for(s.border)
+	fg_open := s.border_open()
+	fg_resume := if fg_open == '' { '' } else { s.sgr() }
 	mut title := s.title
 	if inner > 4 {
 		title = truncate_width(title, inner - 2)
@@ -439,10 +472,10 @@ fn (s Style) render_block(text string) string {
 	if top_fill < 0 {
 		top_fill = 0
 	}
-	out += g.tl + top_label + repeat(g.h, top_fill) + g.tr + '\n'
+	out += fg_open + g.tl + top_label + repeat(g.h, top_fill) + g.tr + fg_resume + '\n'
 	for line in body {
-		out += g.v + line + g.v + '\n'
+		out += fg_open + g.v + fg_resume + line + fg_open + g.v + fg_resume + '\n'
 	}
-	out += g.bl + repeat(g.h, inner) + g.br
+	out += fg_open + g.bl + repeat(g.h, inner) + g.br + fg_resume
 	return out + '\x1b[0m'
 }

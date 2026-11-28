@@ -55,7 +55,19 @@ pub:
 
 // Cmd is a request for side effects from an update. It is a sum type rather
 // than a bare function so that messages and timers remain ordinary values.
-pub type Cmd = NoCmd | MsgCmd | CmdFn | BatchCmd | SequenceCmd | TickCmd | EveryCmd | ExecCmd
+pub type Cmd = NoCmd
+	| MsgCmd
+	| CmdFn
+	| BatchCmd
+	| SequenceCmd
+	| TickCmd
+	| EveryCmd
+	| ExecCmd
+	| QueryCmd
+	| ClipboardCmd
+	| EnvCmd
+	| CursorCmd
+	| TaskProgressCmd
 
 // no_cmd is the command that does nothing.
 pub const no_cmd = Cmd(NoCmd{})
@@ -190,5 +202,10 @@ fn collect_delivered_msgs(cmd Cmd, mut out []Msg, depth int) {
 		TickCmd {}
 		EveryCmd {}
 		ExecCmd {}
+		QueryCmd {}
+		ClipboardCmd {}
+		EnvCmd {}
+		CursorCmd {}
+		TaskProgressCmd {}
 	}
 }

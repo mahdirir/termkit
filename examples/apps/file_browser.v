@@ -101,6 +101,9 @@ fn (mut m Browser) show_selection() {
 fn (mut m Browser) update(msg termkit.Msg) (termkit.Model, termkit.Cmd) {
 	match msg {
 		termkit.KeyMsg {
+			if msg.kind == .release {
+				return m, termkit.no_cmd
+			}
 			match msg.key {
 				'q' {
 					return m, termkit.quit()

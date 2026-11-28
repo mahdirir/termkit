@@ -1,5 +1,7 @@
 module style
 
+import os
+
 // Rgb is an 8-bit-per-channel color.
 pub struct Rgb {
 pub:
@@ -81,4 +83,56 @@ pub fn blend_rgb(a Rgb, b Rgb, t f64) Rgb {
 		g: u8(f64(a.g) + (f64(b.g) - f64(a.g)) * clamped)
 		b: u8(f64(a.b) + (f64(b.b) - f64(a.b)) * clamped)
 	}
+}
+
+// darken moves a color toward black by t in [0, 1].
+pub fn darken(c Rgb, t f64) Rgb {
+	return blend_rgb(c, Rgb{}, t)
+}
+
+// lighten moves a color toward white by t in [0, 1].
+pub fn lighten(c Rgb, t f64) Rgb {
+	return blend_rgb(c, Rgb{ r: 255, g: 255, b: 255 }, t)
+}
+
+// complementary returns the channel-inverted color.
+pub fn complementary(c Rgb) Rgb {
+	return Rgb{ r: 255 - c.r, g: 255 - c.g, b: 255 - c.b }
+}
+
+// ColorScheme holds one color with light and dark terminal variants.
+pub struct ColorScheme {
+pub:
+	light Rgb
+	dark  Rgb
+}
+
+// resolve picks the variant for a dark or light background.
+pub fn (s ColorScheme) resolve(dark_bg bool) Rgb {
+	if dark_bg {
+		return s.dark
+	}
+	return s.light
+}
+
+// detect_dark_background reads COLORFGBG to guess a dark background. It
+// returns none when the variable is absent or unparseable. Many terminals
+// set COLORFGBG as "fg;bg" with 0-6 and 8 meaning dark backgrounds.
+pub fn detect_dark_background() ?bool {
+	raw := os.getenv('COLORFGBG')
+	if raw == '' {
+		return none
+	}
+	parts := raw.split(';')
+	if parts.len < 2 {
+		return none
+	}
+	bg := parts[parts.len - 1].int()
+	if bg >= 0 && (bg <= 6 || bg == 8) {
+		return true
+	}
+	if bg == 7 || (bg >= 9 && bg <= 15) || bg >= 253 {
+		return false
+	}
+	return none
 }

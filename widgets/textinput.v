@@ -154,9 +154,10 @@ pub fn (mut t TextInput) update(msg termkit.Msg) {
 				else {
 					// A multi-byte key that is a single rune is printable text.
 					// Named keys such as f1 have one byte per rune and are ignored.
-					if msg.utf8 != '' {
-						t.insert(msg.utf8)
-					} else if msg.key.len == 1 || rune_len(msg.key) < msg.key.len {
+					text := msg.text()
+					if text != '' {
+						t.insert(text)
+					} else if !msg.is_ctrl() && !msg.is_alt() && termkit.single_rune_text(msg.key) {
 						t.insert(msg.key)
 					}
 				}
